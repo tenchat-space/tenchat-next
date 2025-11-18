@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Box } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { useConversations, type Conversation } from "@/hooks/useMessaging";
+import { useWindowBridge } from "@/hooks/useWindowBridge";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { AuthOverlay } from "@/components/auth/AuthOverlay";
 import { MainSidebar } from "@/components/navigation/MainSidebar";
@@ -42,6 +43,7 @@ export function MainLayout() {
 
   // Fetch conversations
   const { conversations, isLoading: convLoading } = useConversations(legacyUserId);
+  const { openChatWindow, openCallWindow } = useWindowBridge();
 
   // Determine active conversation
   const conversation = useMemo(
@@ -60,6 +62,36 @@ export function MainLayout() {
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/tenchat-item');
+    if (!data) return;
+
+    try {
+      const item = JSON.parse(data);
+      if (item.type === 'chat') {
+        const conv = conversations.find(c => c.$id === item.id);
+        if (conv) {
+          openChatWindow({
+            conversation: conv,
+            currentUserId: legacyUserId,
+            isAuthenticated,
+            onConnect: () => setAuthDialogOpen(true),
+          });
+        }
+      } else if (item.type === 'call') {
+        openCallWindow({
+          callId: item.data.id,
+          participant: item.data.name,
+          type: item.data.type,
+          status: item.data.status,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to parse dropped item', err);
+    }
   };
 
   const renderListPanel = () => {
@@ -103,6 +135,8 @@ export function MainLayout() {
     <>
       <Box
         component="section"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
         sx={{
           display: "flex",
           height: "100dvh",

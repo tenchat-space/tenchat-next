@@ -70,6 +70,14 @@ export function ConversationList({
             key={conv.$id}
             selected={selectedConversation?.$id === conv.$id}
             onClick={() => onSelectConversation(conv)}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('application/tenchat-item', JSON.stringify({
+                type: 'chat',
+                id: conv.$id
+              }));
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
             onContextMenu={(e) => {
               e.preventDefault();
               showMenu(e.clientX, e.clientY, (

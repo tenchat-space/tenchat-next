@@ -42,6 +42,14 @@ export function CallHistory() {
           <ListItemButton 
             key={call.id} 
             onClick={() => handleOpenCall(call)}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('application/tenchat-item', JSON.stringify({
+                type: 'call',
+                data: call
+              }));
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
             onContextMenu={(e) => {
               e.preventDefault();
               showMenu(e.clientX, e.clientY, (
