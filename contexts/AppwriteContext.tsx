@@ -21,7 +21,7 @@ interface AppwriteContextType {
   forceRefreshAuth: () => Promise<void>;
 }
 
-const AppwriteContext = createContext<AppwriteContextType | undefined>(undefined);
+export const AppwriteContext = createContext<AppwriteContextType | undefined>(undefined);
 
 export function AppwriteProvider({ children }: { children: React.ReactNode }) {
   const [currentAccount, setCurrentAccount] = useState<Models.User<Models.Preferences> | null>(null);
