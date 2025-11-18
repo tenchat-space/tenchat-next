@@ -8,7 +8,7 @@ import {
   SettingsOutlined,
   WalletOutlined,
 } from "@mui/icons-material";
-import { Avatar, Box, Divider, IconButton, Stack, Tooltip } from "@mui/material";
+import { Avatar, Box, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 
 interface SidebarItem {
   id: string;
