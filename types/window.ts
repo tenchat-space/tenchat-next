@@ -7,7 +7,7 @@ export interface WindowTab {
   title: string;
   type: WindowContentType;
   component?: ReactNode; // For direct component injection
-  props?: any;
+  props?: Record<string, unknown>;
 }
 
 export interface WindowInstance {

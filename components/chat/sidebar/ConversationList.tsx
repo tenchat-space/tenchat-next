@@ -3,10 +3,13 @@ import {
   ListItemText,
   Typography,
   Fab,
+  IconButton,
+  Stack,
 } from "@mui/material";
-import { Edit } from "@mui/icons-material";
+import { Edit, OpenInNew } from "@mui/icons-material";
 import { Conversation } from "@/hooks/useMessaging";
 import { SidebarPanel } from "./views/SidebarPanel";
+import { useWindowBridge } from "@/hooks/useWindowBridge";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -14,6 +17,8 @@ interface ConversationListProps {
   selectedConversation: Conversation | null;
   onSelectConversation: (conv: Conversation) => void;
   legacyUserId?: string;
+  isAuthenticated: boolean;
+  onConnect: () => void;
 }
 
 export function ConversationList({
@@ -22,6 +27,8 @@ export function ConversationList({
   selectedConversation,
   onSelectConversation,
   legacyUserId,
+  isAuthenticated,
+  onConnect,
 }: ConversationListProps) {
   const formatConversationLabel = (conv: Conversation) => {
     if (conv.name) return conv.name;
@@ -31,6 +38,7 @@ export function ConversationList({
     }
     return "Tenchat room";
   };
+  const { openChatWindow } = useWindowBridge();
 
   return (
     <SidebarPanel
@@ -57,14 +65,33 @@ export function ConversationList({
             selected={selectedConversation?.$id === conv.$id}
             onClick={() => onSelectConversation(conv)}
           >
-            <ListItemText
-              primary={formatConversationLabel(conv)}
-              secondary={conv.lastMessageText || "No messages yet"}
-              secondaryTypographyProps={{
-                 noWrap: true,
-                 color: selectedConversation?.$id === conv.$id ? 'primary.light' : 'text.secondary'
-              }}
-            />
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
+                    <ListItemText
+                      primary={formatConversationLabel(conv)}
+                      secondary={conv.lastMessageText || "No messages yet"}
+                      secondaryTypographyProps={{
+                        noWrap: true,
+                        color: selectedConversation?.$id === conv.$id ? 'primary.light' : 'text.secondary'
+                      }}
+                      sx={{ flex: 1 }}
+                    />
+                    <IconButton
+                      size="small"
+                      edge="end"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openChatWindow({
+                          conversation: conv,
+                          currentUserId: legacyUserId || '',
+                          isAuthenticated,
+                          onConnect,
+                        });
+                      }}
+                      aria-label="Open in window"
+                    >
+                      <OpenInNew fontSize="small" />
+                    </IconButton>
+                  </Stack>
           </ListItemButton>
         ))
       )}

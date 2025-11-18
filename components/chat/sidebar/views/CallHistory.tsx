@@ -4,10 +4,12 @@ import {
   ListItemButton,
   ListItemAvatar,
   ListItemText,
-  IconButton,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { Call, VideoCall } from "@mui/icons-material";
 import { SidebarPanel } from "./SidebarPanel";
+import { useWindowBridge } from "@/hooks/useWindowBridge";
 
 const MOCK_CALLS = [
   { id: "1", name: "Alice Chen", time: "Today, 10:30 AM", type: "voice", status: "missed" },
@@ -16,25 +18,38 @@ const MOCK_CALLS = [
 ];
 
 export function CallHistory() {
+  const { openCallWindow } = useWindowBridge();
+
+  const handleOpenCall = (call: (typeof MOCK_CALLS)[number]) => {
+    openCallWindow({
+      callId: call.id,
+      participant: call.name,
+      type: call.type as 'voice' | 'video',
+      status: call.status,
+    });
+  };
+
   return (
     <SidebarPanel title="Calls" subtitle="Encrypted Voice & Video">
       <List>
         {MOCK_CALLS.map((call) => (
-          <ListItemButton key={call.id}>
+          <ListItemButton key={call.id} onClick={() => handleOpenCall(call)}>
             <ListItemAvatar>
               <Avatar>{call.name[0]}</Avatar>
             </ListItemAvatar>
             <ListItemText
               primary={call.name}
               secondary={
-                <span style={{ color: call.status === "missed" ? "#ef4444" : "inherit" }}>
-                  {call.status === "missed" ? "Missed call" : call.time}
-                </span>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ color: call.status === "missed" ? "#ef4444" : "inherit" }}>
+                  <Typography variant="caption" component="span">
+                    {call.status === "missed" ? "Missed call" : call.time}
+                  </Typography>
+                  <Typography variant="caption" component="span" color="text.secondary">
+                    • {call.status}
+                  </Typography>
+                </Stack>
               }
             />
-            <IconButton size="small" color="secondary">
-              {call.type === "video" ? <VideoCall /> : <Call />}
-            </IconButton>
           </ListItemButton>
         ))}
       </List>

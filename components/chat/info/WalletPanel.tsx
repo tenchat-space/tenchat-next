@@ -41,10 +41,10 @@ export function WalletPanel() {
       </Card>
 
       <Stack direction="row" spacing={1}>
-        <Button flex={1} variant="contained" color="primary" startIcon={<Send />}>
+        <Button sx={{ flex: 1 }} variant="contained" color="primary" startIcon={<Send />}>
           Send
         </Button>
-        <Button flex={1} variant="outlined" color="secondary" startIcon={<CallReceived />}>
+        <Button sx={{ flex: 1 }} variant="outlined" color="secondary" startIcon={<CallReceived />}>
           Receive
         </Button>
       </Stack>

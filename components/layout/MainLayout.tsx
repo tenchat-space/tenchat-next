@@ -71,6 +71,8 @@ export function MainLayout() {
             selectedConversation={conversation}
             onSelectConversation={handleSelectConversation}
             legacyUserId={legacyUserId}
+            isAuthenticated={isAuthenticated}
+            onConnect={() => setAuthDialogOpen(true)}
           />
         );
       case 'stories':
@@ -89,6 +91,8 @@ export function MainLayout() {
             selectedConversation={conversation}
             onSelectConversation={handleSelectConversation}
             legacyUserId={legacyUserId}
+            isAuthenticated={isAuthenticated}
+            onConnect={() => setAuthDialogOpen(true)}
           />
         );
     }

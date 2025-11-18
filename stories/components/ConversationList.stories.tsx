@@ -45,6 +45,8 @@ export const Loading: Story = {
     selectedConversation: null,
     onSelectConversation: () => {},
     legacyUserId: 'curr-user',
+    isAuthenticated: true,
+    onConnect: () => {},
   },
 };
 
@@ -55,6 +57,8 @@ export const Empty: Story = {
     selectedConversation: null,
     onSelectConversation: () => {},
     legacyUserId: 'curr-user',
+    isAuthenticated: true,
+    onConnect: () => {},
   },
 };
 
@@ -65,6 +69,8 @@ export const WithData: Story = {
     selectedConversation: MOCK_CONVERSATIONS[0],
     onSelectConversation: (conv) => console.log('Selected:', conv),
     legacyUserId: 'curr-user',
+    isAuthenticated: true,
+    onConnect: () => console.log('Connect'),
   },
 };
 
