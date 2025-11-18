@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { useConversations, type Conversation } from "@/hooks/useMessaging";
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { AuthOverlay } from "@/components/auth/AuthOverlay";
 import { MainSidebar } from "@/components/navigation/MainSidebar";
 import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
@@ -49,13 +50,13 @@ export function MainLayout() {
   );
 
   // Handle Auth Dialog
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-        setAuthDialogOpen(true);
-    } else if (isAuthenticated) {
-        setAuthDialogOpen(false);
-    }
-  }, [isAuthenticated, isLoading]);
+  // useEffect(() => {
+  //   if (!isLoading && !isAuthenticated) {
+  //       setAuthDialogOpen(true);
+  //   } else if (isAuthenticated) {
+  //       setAuthDialogOpen(false);
+  //   }
+  // }, [isAuthenticated, isLoading]);
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
@@ -108,6 +109,9 @@ export function MainLayout() {
           width: "100%",
           bgcolor: "background.default",
           overflow: "hidden",
+          filter: !isAuthenticated && !isLoading ? 'blur(8px)' : 'none',
+          pointerEvents: !isAuthenticated && !isLoading ? 'none' : 'auto',
+          transition: 'filter 0.3s ease',
         }}
       >
         <MainSidebar
@@ -147,6 +151,7 @@ export function MainLayout() {
       </Box>
 
       {/* Dialogs and Overlays */}
+      <AuthOverlay />
       <AuthDialog open={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
       
       <SettingsDialog 
