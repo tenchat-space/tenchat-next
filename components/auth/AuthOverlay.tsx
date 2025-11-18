@@ -14,7 +14,7 @@ export function AuthOverlay() {
   const handleLogin = () => {
     const authSubdomain = process.env.NEXT_PUBLIC_AUTH_SUBDOMAIN || 'auth';
     const domain = process.env.NEXT_PUBLIC_DOMAIN || 'tenchat.space';
-    const authUrl = `https://${authSubdomain}.${domain}`;
+    const authUrl = `https://${authSubdomain}.${domain}/login`;
     
     const width = 500;
     const height = 600;
