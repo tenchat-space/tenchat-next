@@ -29,6 +29,9 @@ export function MainLayout() {
   const legacyUserId = useMemo(() => {
     return currentAccount?.$id || currentUser?.id || "";
   }, [currentAccount, currentUser]);
+  const displayName = useMemo(() => {
+    return currentAccount?.name || currentUser?.displayName || "You";
+  }, [currentAccount, currentUser]);
 
   const [activeLeftId, setActiveLeftId] = useState("chats");
   const [activeRightId, setActiveRightId] = useState("profile");
@@ -42,7 +45,9 @@ export function MainLayout() {
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
 
   // Fetch conversations
-  const { conversations, isLoading: convLoading } = useConversations(legacyUserId);
+  const { conversations, isLoading: convLoading } = useConversations(legacyUserId, {
+    userName: displayName,
+  });
   const { openChatWindow, openCallWindow } = useWindowBridge();
 
   // Determine active conversation

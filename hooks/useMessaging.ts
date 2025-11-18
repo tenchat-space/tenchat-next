@@ -53,27 +53,6 @@ export function useConversations(userId: string, options?: { userName?: string }
 
   const loadConversations = useCallback(async () => {
     if (!userId) return;
-    
-    const displayName = useMemo(() => options?.userName || 'You', [options]);
-
-    const selfConversation = useMemo(() => {
-      if (!userId) return null;
-      return {
-        $id: `self-${userId}`,
-        name: `${displayName} (You)`,
-        participantIds: [userId],
-        lastMessageText: 'Private notes with yourself',
-      } satisfies Conversation;
-    }, [displayName, userId]);
-
-    const ensureSelfConversation = useCallback(
-      (list: Conversation[]) => {
-        if (!selfConversation) return list;
-        const filtered = list.filter((conv) => conv.$id !== selfConversation.$id);
-        return [selfConversation, ...filtered];
-      },
-      [selfConversation]
-    );
 
     try {
       setIsLoading(true);
@@ -93,8 +72,8 @@ export function useConversations(userId: string, options?: { userName?: string }
 
     // Subscribe to real-time updates
     const unsubscribe = realtimeService.subscribeToConversations<Conversation>((event) => {
-        const conversation = event.payload;
-      
+      const conversation = event.payload;
+
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setConversations(prev => ensureSelfConversation([conversation, ...prev.filter((c) => c.$id !== conversation.$id)]));
       } else if (event.events.includes('databases.*.collections.*.documents.*.update')) {
