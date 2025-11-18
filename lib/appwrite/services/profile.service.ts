@@ -6,7 +6,8 @@
 import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, MAIN_COLLECTIONS } from '../config/constants';
-import type { Profiles } from '@/types/appwrite.d';
+
+type ProfileRow = Record<string, any>;
 
 export class ProfileService {
   private readonly databaseId = DATABASE_IDS.MAIN;
@@ -15,14 +16,14 @@ export class ProfileService {
   /**
    * Get profile by user ID
    */
-  async getProfile(userId: string): Promise<Profiles | null> {
+  async getProfile(userId: string): Promise<ProfileRow | null> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
         tableId: this.tableId,
         queries: [Query.equal('userId', userId), Query.limit(1)]
       });
-      return (response.rows[0] as Profiles) || null;
+      return (response.rows[0] as ProfileRow) || null;
     } catch (error) {
       console.error('Error getting profile:', error);
       return null;
@@ -32,13 +33,13 @@ export class ProfileService {
   /**
    * Get profile by document ID
    */
-  async getProfileById(id: string): Promise<Profiles | null> {
+  async getProfileById(id: string): Promise<ProfileRow | null> {
     try {
       return await tablesDB.getRow({
         databaseId: this.databaseId,
         tableId: this.tableId,
         rowId: id
-      }) as Profiles;
+      }) as ProfileRow;
     } catch (error) {
       console.error('Error getting profile by ID:', error);
       return null;
@@ -48,7 +49,7 @@ export class ProfileService {
   /**
    * Create a new profile
    */
-  async createProfile(userId: string, data: Partial<Profiles>): Promise<Profiles> {
+  async createProfile(userId: string, data: Partial<ProfileRow>): Promise<ProfileRow> {
     return await tablesDB.createRow({
       databaseId: this.databaseId,
       tableId: this.tableId,
@@ -59,13 +60,13 @@ export class ProfileService {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-    }) as Profiles;
+    }) as unknown as ProfileRow;
   }
 
   /**
    * Update profile
    */
-  async updateProfile(rowId: string, data: Partial<Profiles>): Promise<Profiles> {
+  async updateProfile(rowId: string, data: Partial<ProfileRow>): Promise<ProfileRow> {
     return await tablesDB.updateRow({
       databaseId: this.databaseId,
       tableId: this.tableId,
@@ -74,13 +75,13 @@ export class ProfileService {
         ...data,
         updatedAt: new Date().toISOString(),
       }
-    }) as Profiles;
+    }) as unknown as ProfileRow;
   }
 
   /**
    * Update online status
    */
-  async updateOnlineStatus(rowId: string, isOnline: boolean): Promise<Profiles> {
+  async updateOnlineStatus(rowId: string, isOnline: boolean): Promise<ProfileRow> {
     return await this.updateProfile(rowId, {
       isOnline,
       lastSeen: new Date().toISOString(),
@@ -90,14 +91,14 @@ export class ProfileService {
   /**
    * Search profiles by username
    */
-  async searchProfiles(username: string, limit = 10): Promise<Profiles[]> {
+  async searchProfiles(username: string, limit = 10): Promise<ProfileRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
         tableId: this.tableId,
         queries: [Query.search('username', username), Query.limit(limit)]
       });
-      return response.rows as Profiles[];
+      return response.rows as ProfileRow[];
     } catch (error) {
       console.error('Error searching profiles:', error);
       return [];
@@ -107,14 +108,14 @@ export class ProfileService {
   /**
    * Get online users
    */
-  async getOnlineUsers(limit = 50): Promise<Profiles[]> {
+  async getOnlineUsers(limit = 50): Promise<ProfileRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
         tableId: this.tableId,
         queries: [Query.equal('isOnline', true), Query.limit(limit)]
       });
-      return response.rows as Profiles[];
+      return response.rows as ProfileRow[];
     } catch (error) {
       console.error('Error getting online users:', error);
       return [];
@@ -124,7 +125,7 @@ export class ProfileService {
   /**
    * Update user XP and level
    */
-  async addXP(rowId: string, xpToAdd: number): Promise<Profiles> {
+  async addXP(rowId: string, xpToAdd: number): Promise<ProfileRow> {
     const profile = await this.getProfileById(rowId);
     if (!profile) throw new Error('Profile not found');
 
@@ -140,7 +141,7 @@ export class ProfileService {
   /**
    * Update streak
    */
-  async updateStreak(rowId: string): Promise<Profiles> {
+  async updateStreak(rowId: string): Promise<ProfileRow> {
     const profile = await this.getProfileById(rowId);
     if (!profile) throw new Error('Profile not found');
 
@@ -154,7 +155,7 @@ export class ProfileService {
   /**
    * Add badge to user
    */
-  async addBadge(rowId: string, badgeId: string): Promise<Profiles> {
+  async addBadge(rowId: string, badgeId: string): Promise<ProfileRow> {
     const profile = await this.getProfileById(rowId);
     if (!profile) throw new Error('Profile not found');
 

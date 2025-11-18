@@ -5,10 +5,25 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { web3Service } from '@/lib/appwrite';
-import type { Wallets, Nfts, CryptoTransactions, TokenGifts, TokenHoldings } from '@/types/appwrite.d';
+
+interface Wallet {
+  id: string;
+  isPrimary?: boolean;
+  [key: string]: any;
+}
+
+interface NFT {
+  id: string;
+  isProfilePicture?: boolean;
+  [key: string]: any;
+}
+
+type CryptoTransaction = Record<string, any>;
+type TokenGift = Record<string, any>;
+type TokenHolding = Record<string, any>;
 
 export function useWallets(userId: string) {
-  const [wallets, setWallets] = useState<Wallets[]>([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -71,7 +86,7 @@ export function useWallets(userId: string) {
 }
 
 export function useNFTs(userId: string) {
-  const [nfts, setNfts] = useState<Nfts[]>([]);
+  const [nfts, setNfts] = useState<NFT[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -95,7 +110,7 @@ export function useNFTs(userId: string) {
     loadNFTs();
   }, [loadNFTs]);
 
-  const addNFT = useCallback(async (nftData: Partial<Nfts>) => {
+  const addNFT = useCallback(async (nftData: Partial<NFT>) => {
     try {
       const newNft = await web3Service.addNFT(userId, nftData);
       setNfts(prev => [...prev, newNft]);
@@ -130,7 +145,7 @@ export function useNFTs(userId: string) {
 }
 
 export function useTransactions(userId: string) {
-  const [transactions, setTransactions] = useState<CryptoTransactions[]>([]);
+  const [transactions, setTransactions] = useState<CryptoTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -154,7 +169,7 @@ export function useTransactions(userId: string) {
     loadTransactions();
   }, [loadTransactions]);
 
-  const recordTransaction = useCallback(async (txData: Partial<CryptoTransactions>) => {
+  const recordTransaction = useCallback(async (txData: Partial<CryptoTransaction>) => {
     try {
       const newTx = await web3Service.recordTransaction({
         ...txData,
@@ -189,7 +204,7 @@ export function useTransactions(userId: string) {
 }
 
 export function useTokenGifts(userId: string) {
-  const [pendingGifts, setPendingGifts] = useState<TokenGifts[]>([]);
+  const [pendingGifts, setPendingGifts] = useState<TokenGift[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -217,7 +232,7 @@ export function useTokenGifts(userId: string) {
     return () => clearInterval(interval);
   }, [loadPendingGifts]);
 
-  const createGift = useCallback(async (giftData: Partial<TokenGifts>) => {
+  const createGift = useCallback(async (giftData: Partial<TokenGift>) => {
     try {
       const newGift = await web3Service.createGift({
         ...giftData,
@@ -252,7 +267,7 @@ export function useTokenGifts(userId: string) {
 }
 
 export function useTokenHoldings(userId: string, chain?: string) {
-  const [holdings, setHoldings] = useState<TokenHoldings[]>([]);
+  const [holdings, setHoldings] = useState<TokenHolding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -276,7 +291,7 @@ export function useTokenHoldings(userId: string, chain?: string) {
     loadHoldings();
   }, [loadHoldings]);
 
-  const updateHolding = useCallback(async (holdingData: Partial<TokenHoldings>) => {
+  const updateHolding = useCallback(async (holdingData: Partial<TokenHolding>) => {
     try {
       await web3Service.updateHoldings(userId, holdingData);
       await loadHoldings();

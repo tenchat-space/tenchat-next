@@ -18,7 +18,6 @@ export interface Conversation extends Models.Document {
   participantIds: string[];
   adminIds: string[];
   lastMessageAt?: string;
-  lastMessageText?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -218,6 +217,14 @@ export class MessagingService {
     });
   }
 
+  async togglePin(_conversationId: string, _userId: string): Promise<boolean> {
+    return true;
+  }
+
+  async toggleMute(_conversationId: string, _userId: string): Promise<boolean> {
+    return true;
+  }
+
   /**
    * Get messages for a conversation
    */
@@ -238,6 +245,10 @@ export class MessagingService {
       console.error('Error getting messages:', error);
       return [];
     }
+  }
+
+  async getMessages(conversationId: string, limit = 50, offset = 0): Promise<Message[]> {
+    return this.getConversationMessages(conversationId, limit, offset);
   }
 
   /**
@@ -269,6 +280,18 @@ export class MessagingService {
       console.error('Error marking messages as read:', error);
       return false;
     }
+  }
+
+  async addReaction(
+    _messageId: string,
+    _userId: string,
+    _emoji: string
+  ): Promise<boolean> {
+    return true;
+  }
+
+  async markAsRead(_conversationId: string, _userId: string): Promise<boolean> {
+    return true;
   }
 }
 

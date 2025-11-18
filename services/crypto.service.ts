@@ -290,7 +290,7 @@ export class CryptoService {
 
     return {
       ciphertext: this.arrayBufferToBase64(ciphertext),
-      nonce: this.arrayBufferToBase64(nonceBytes)
+      nonce: this.arrayBufferToBase64(nonceBytes.buffer)
     };
   }
 
@@ -386,11 +386,11 @@ export class CryptoService {
       for (let i = 0; i < length; i++) {
         bytes[i] = Math.floor(Math.random() * 256);
       }
-      return this.arrayBufferToBase64(bytes);
+      return this.arrayBufferToBase64(bytes.buffer);
     }
     
     const bytes = crypto.getRandomValues(new Uint8Array(length));
-    return this.arrayBufferToBase64(bytes);
+    return this.arrayBufferToBase64(bytes.buffer);
   }
 
   /**

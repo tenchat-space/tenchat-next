@@ -18,6 +18,7 @@ export interface ChatMessage {
   senderId: string;
   content: string;
   conversationId: string;
+  contentType?: string;
 }
 
 export function useConversations(userId: string) {
@@ -107,7 +108,7 @@ export function useConversations(userId: string) {
 }
 
 export function useMessages(conversationId: string) {
-  const [messages, setMessages] = useState<Messages[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -132,7 +133,7 @@ export function useMessages(conversationId: string) {
 
     // Subscribe to real-time message updates
     const unsubscribe = realtimeService.subscribeToMessages(conversationId, (event) => {
-        const message = event.payload as ChatMessage;
+      const message = event.payload as ChatMessage;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setMessages(prev => [...prev, message]);
@@ -148,7 +149,7 @@ export function useMessages(conversationId: string) {
     };
   }, [conversationId, loadMessages]);
 
-  const sendMessage = useCallback(async (data: Partial<Messages>) => {
+  const sendMessage = useCallback(async (data: Partial<ChatMessage>) => {
     try {
       const newMsg = await messagingService.sendMessage({
         ...data,

@@ -6,7 +6,8 @@
 import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, ANALYTICS_COLLECTIONS } from '../config/constants';
-import type { Notifications } from '@/types/appwrite.d';
+
+type NotificationRow = Record<string, any>;
 
 export class NotificationsService {
   private readonly databaseId = DATABASE_IDS.ANALYTICS;
@@ -15,7 +16,7 @@ export class NotificationsService {
   /**
    * Create a notification
    */
-  async createNotification(data: Partial<Notifications>): Promise<Notifications> {
+  async createNotification(data: Partial<NotificationRow>): Promise<NotificationRow> {
     return await tablesDB.createRow({
       databaseId: this.databaseId,
       tableId: this.tableId,
@@ -25,13 +26,13 @@ export class NotificationsService {
         isRead: false,
         createdAt: new Date().toISOString(),
       }
-    }) as Notifications;
+    }) as unknown as NotificationRow;
   }
 
   /**
    * Get user notifications
    */
-  async getUserNotifications(userId: string, limit = 50, onlyUnread = false): Promise<Notifications[]> {
+  async getUserNotifications(userId: string, limit = 50, onlyUnread = false): Promise<NotificationRow[]> {
     try {
       const queries = [
         Query.equal('userId', userId),
@@ -48,7 +49,7 @@ export class NotificationsService {
         tableId: this.tableId,
         queries,
       });
-      return response.rows as Notifications[];
+      return response.rows as NotificationRow[];
     } catch (error) {
       console.error('Error getting notifications:', error);
       return [];
@@ -58,7 +59,7 @@ export class NotificationsService {
   /**
    * Mark notification as read
    */
-  async markAsRead(notificationId: string): Promise<Notifications> {
+  async markAsRead(notificationId: string): Promise<NotificationRow> {
     return await tablesDB.updateRow({
       databaseId: this.databaseId,
       tableId: this.tableId,
@@ -67,7 +68,7 @@ export class NotificationsService {
         isRead: true,
         readAt: new Date().toISOString(),
       }
-    }) as Notifications;
+    }) as unknown as NotificationRow;
   }
 
   /**

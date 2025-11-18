@@ -34,7 +34,7 @@ export class ContactsService {
         addedAt: new Date().toISOString(),
       }
     );
-    return contact as Contact;
+    return contact as unknown as Contact;
   }
 
   async getUserContacts(userId: string): Promise<Contact[]> {
@@ -47,7 +47,7 @@ export class ContactsService {
           Query.orderDesc('addedAt'),
         ]
       );
-      return response.documents as Contact[];
+      return response.documents as unknown as Contact[];
     } catch (error) {
       console.error('Error getting contacts:', error);
       return [];
@@ -61,7 +61,7 @@ export class ContactsService {
       contactId,
       data
     );
-    return contact as Contact;
+    return contact as unknown as Contact;
   }
 
   async deleteContact(contactId: string): Promise<void> {

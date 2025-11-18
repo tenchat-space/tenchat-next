@@ -46,23 +46,10 @@ export const authService = {
     success: false, 
     error: 'Service temporarily unavailable - please try again' 
   }),
-  loginWithWallet: async (email: string) => {
-    try {
-      const { AuthService } = await import('./auth.service');
-      const { CryptoService } = await import('./crypto.service');
-      const realAuth = new AuthService(new CryptoService());
-      const res = await realAuth.loginWithWallet(email);
-      if (res.success) {
-        saveAuthState({ user: res.user, token: res.token, timestamp: Date.now() });
-      }
-      return res;
-    } catch (e) {
-      return {
-        success: false,
-        error: 'Wallet login unavailable in stub mode'
-      };
-    }
-  },
+  loginWithWallet: async (_email: string) => ({
+    success: false,
+    error: 'Wallet login unavailable in stub mode'
+  }),
   loginAnonymous: async (username: string) => {
     const id = `anon:${username.toLowerCase()}#${Math.random().toString(36).slice(2, 8)}`;
     const user = {
@@ -251,46 +238,7 @@ export const pluginService = {
 
 console.log('✓ TenChat services initialized (stub mode)');
 
-// Try to initialize real services asynchronously without blocking
-setTimeout(async () => {
-  try {
-    console.log('Attempting to upgrade to real services...');
-    
-    // Dynamically import and try to create real instances
-    const { AuthService } = await import('./auth.service');
-    const { CryptoService } = await import('./crypto.service');
-    const { MessagingService } = await import('./messaging.service');
-    const { KeyManagementService } = await import('./key-management.service');
-    const { ChainClient, NotarizationService } = await import('./blockchain.service');
-    const { PluginService } = await import('./plugin.service');
-    const { GiftingService } = await import('./gifting.service');
-    
-    // Try to create real instances
-    const realCrypto = new CryptoService();
-    const realKeyManagement = new KeyManagementService(realCrypto);
-    const realAuth = new AuthService(realCrypto);
-    const realMessaging = new MessagingService(realCrypto, realKeyManagement);
-    const realChain = new ChainClient(realCrypto);
-    const realNotarization = new NotarizationService(realCrypto, realChain);
-    const realGifting = new GiftingService();
-    const realPlugin = new PluginService();
-    
-    // Replace stub methods with real implementations
-    Object.assign(cryptoService, realCrypto);
-    Object.assign(keyManagementService, realKeyManagement);
-    Object.assign(authService, realAuth);
-    Object.assign(messagingService, realMessaging);
-    Object.assign(chainClient, realChain);
-    Object.assign(notarizationService, realNotarization);
-    Object.assign(giftingService, realGifting);
-    Object.assign(pluginService, realPlugin);
-    
-    console.log('✓ Successfully upgraded to real services');
-    
-  } catch (error) {
-    console.warn('Could not upgrade to real services, continuing with stubs:', error);
-  }
-}, 100);
+// Note: There are no production-ready service implementations in this build.
 
 // Re-export service instances for convenience
 export const services = {

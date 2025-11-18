@@ -9,7 +9,17 @@ export class KeyManagementService implements IKeyManagementService {
   private identityStorage = 'whisperr_identity';
   private sessionStorage = 'whisperr_sessions';
   private keyRotationInterval = 24 * 60 * 60 * 1000; // 24 hours
-  private cryptoService: CryptoService;
+  private cryptoService: CryptoService = {
+    generateIdentity: async () => ({ id: 'stub', publicKey: '', identityKey: '', signedPreKey: '', oneTimePreKeys: [] }),
+    generateKeyPair: async () => ({ publicKey: '', privateKey: '' }),
+    generateRandomBytes: () => 'stub-random',
+    deriveSharedSecret: async () => '',
+    hkdf: async () => '',
+    initializeSession: async () => ({} as SessionState),
+    encryptMessage: async () => ({ ciphertext: '', nonce: '' }),
+    decryptMessage: async () => ({ content: '', nonce: '' }),
+    hash: async () => 'hash'
+  } as any;
 
   constructor(cryptoService?: CryptoService) {
     try {

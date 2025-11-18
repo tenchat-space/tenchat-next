@@ -19,7 +19,7 @@ export class RealtimeService {
     return client.subscribe(
       `databases.${DATABASE_IDS.CHAT}.collections.${CHAT_TABLES.MESSAGES}.documents`,
       (response) => {
-        const message = response.payload;
+        const message = response.payload as any;
         if (message.conversationId === conversationId) {
           callback(response);
         }
@@ -34,7 +34,7 @@ export class RealtimeService {
     return client.subscribe(
       `databases.${DATABASE_IDS.CHAT}.collections.${CHAT_TABLES.TYPING_INDICATORS}.documents`,
       (response) => {
-        const indicator = response.payload;
+        const indicator = response.payload as any;
         if (indicator.conversationId === conversationId) {
           callback(response);
         }

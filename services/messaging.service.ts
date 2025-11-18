@@ -16,8 +16,20 @@ export class MessagingService implements IMessagingService {
   private conversations: Map<string, Conversation> = new Map();
   private messages: Map<string, EncryptedMessage[]> = new Map();
   private eventListeners: Map<string, Function[]> = new Map();
-  private cryptoService: CryptoService;
-  private keyManagementService: KeyManagementService;
+  private cryptoService: CryptoService = {
+    encryptMessage: async () => ({ ciphertext: '', nonce: '' }),
+    decryptMessage: async () => '',
+    advanceChain: async () => ({ messageKey: '', newChainState: { chainKey: '', messageNumber: 0 } }),
+    generateRandomBytes: () => 'stub-random',
+    initializeSession: async () => ({ sendingChain: { chainKey: '', messageNumber: 0 }, receivingChains: new Map(), rootKey: '', sessionId: 'stub' }),
+    deriveSharedSecret: async () => '',
+    hkdf: async () => '',
+    hash: async () => 'hash'
+  } as any;
+  private keyManagementService: KeyManagementService = {
+    getSessionState: async () => null,
+    updateSessionState: async () => {}
+  } as any;
 
   constructor(cryptoService?: CryptoService, keyManagementService?: KeyManagementService) {
     try {

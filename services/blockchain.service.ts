@@ -250,12 +250,16 @@ export class ChainClient implements IChainClient {
  * Notarization service for blockchain anchoring
  */
 export class NotarizationService implements INotarizationService {
-  private chainClient: ChainClient;
+  private chainClient: ChainClient = {
+    submitTransaction: async () => 'stub-tx',
+    getBlockHeight: async () => 0,
+    getTransactionStatus: async () => 'confirmed',
+  } as any;
   private pendingAnchors: Map<string, string[]> = new Map();
   private anchors: BlockchainAnchor[] = [];
   private batchSize = 1000; // Maximum messages per batch
   private batchTimeout = 10 * 60 * 1000; // 10 minutes
-  private cryptoService: CryptoService;
+  private cryptoService: CryptoService = { hash: async () => 'stub-hash' } as any;
 
   constructor(cryptoService?: CryptoService, chainClient?: ChainClient) {
     try {
@@ -265,13 +269,6 @@ export class NotarizationService implements INotarizationService {
       this.loadPersistedAnchors();
     } catch (error) {
       console.error('NotarizationService constructor failed:', error);
-      // Provide stub implementations
-      this.cryptoService = this.cryptoService || ({ hash: async () => 'stub-hash' } as any);
-      this.chainClient = this.chainClient || ({
-        submitTransaction: async () => 'stub-tx',
-        getBlockHeight: async () => 0,
-        getTransactionStatus: async () => 'confirmed'
-      } as any);
     }
   }
 

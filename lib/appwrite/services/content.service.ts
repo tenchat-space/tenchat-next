@@ -6,7 +6,8 @@
 import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, CONTENT_COLLECTIONS } from '../config/constants';
-import type { Stickers, StickerPacks, UserStickers, Gifs, Polls, ArFilters, MediaLibrary } from '@/types/appwrite.d';
+
+type ContentRow = Record<string, any>;
 
 export class ContentService {
   private readonly databaseId = DATABASE_IDS.CONTENT;
@@ -16,7 +17,7 @@ export class ContentService {
   /**
    * Get all sticker packs
    */
-  async getStickerPacks(limit = 50): Promise<StickerPacks[]> {
+  async getStickerPacks(limit = 50): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -27,7 +28,7 @@ export class ContentService {
           Query.limit(limit),
         ]
       });
-      return response.rows as StickerPacks[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting sticker packs:', error);
       return [];
@@ -37,7 +38,7 @@ export class ContentService {
   /**
    * Get stickers in a pack
    */
-  async getStickersInPack(packId: string): Promise<Stickers[]> {
+  async getStickersInPack(packId: string): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -47,7 +48,7 @@ export class ContentService {
           Query.orderAsc('order'),
         ]
       });
-      return response.rows as Stickers[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting stickers:', error);
       return [];
@@ -57,14 +58,14 @@ export class ContentService {
   /**
    * Get user's stickers
    */
-  async getUserStickers(userId: string): Promise<UserStickers[]> {
+  async getUserStickers(userId: string): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
         tableId: CONTENT_COLLECTIONS.USER_STICKERS,
         queries: [Query.equal('userId', userId)]
       });
-      return response.rows as UserStickers[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting user stickers:', error);
       return [];
@@ -74,7 +75,7 @@ export class ContentService {
   /**
    * Add sticker pack to user
    */
-  async addStickerPack(userId: string, packId: string): Promise<UserStickers> {
+  async addStickerPack(userId: string, packId: string): Promise<ContentRow> {
     return await tablesDB.createRow({
       databaseId: this.databaseId,
       tableId: CONTENT_COLLECTIONS.USER_STICKERS,
@@ -85,7 +86,7 @@ export class ContentService {
         usageCount: 0,
         addedAt: new Date().toISOString(),
       }
-    }) as UserStickers;
+    }) as unknown as ContentRow;
   }
 
   // ==================== GIFs ====================
@@ -93,7 +94,7 @@ export class ContentService {
   /**
    * Search GIFs
    */
-  async searchGifs(query: string, limit = 30): Promise<Gifs[]> {
+  async searchGifs(query: string, limit = 30): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -103,7 +104,7 @@ export class ContentService {
           Query.limit(limit),
         ]
       });
-      return response.rows as Gifs[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error searching GIFs:', error);
       return [];
@@ -113,7 +114,7 @@ export class ContentService {
   /**
    * Get trending GIFs
    */
-  async getTrendingGifs(limit = 30): Promise<Gifs[]> {
+  async getTrendingGifs(limit = 30): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -123,7 +124,7 @@ export class ContentService {
           Query.limit(limit),
         ]
       });
-      return response.rows as Gifs[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting trending GIFs:', error);
       return [];
@@ -139,7 +140,7 @@ export class ContentService {
         databaseId: this.databaseId,
         tableId: CONTENT_COLLECTIONS.GIFS,
         rowId: gifId
-      }) as Gifs;
+      }) as ContentRow;
 
       await tablesDB.updateRow({
         databaseId: this.databaseId,
@@ -159,7 +160,7 @@ export class ContentService {
   /**
    * Get all AR filters
    */
-  async getARFilters(limit = 50): Promise<ArFilters[]> {
+  async getARFilters(limit = 50): Promise<ContentRow[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -170,7 +171,7 @@ export class ContentService {
           Query.limit(limit),
         ]
       });
-      return response.rows as ArFilters[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting AR filters:', error);
       return [];
@@ -186,7 +187,7 @@ export class ContentService {
         databaseId: this.databaseId,
         tableId: CONTENT_COLLECTIONS.AR_FILTERS,
         rowId: filterId
-      }) as ArFilters;
+      }) as ContentRow;
 
       await tablesDB.updateRow({
         databaseId: this.databaseId,
@@ -206,7 +207,7 @@ export class ContentService {
   /**
    * Create a poll
    */
-  async createPoll(data: Partial<Polls>): Promise<Polls> {
+  async createPoll(data: Partial<ContentRow>): Promise<ContentRow> {
     return await tablesDB.createRow({
       databaseId: this.databaseId,
       tableId: CONTENT_COLLECTIONS.POLLS,
@@ -217,18 +218,18 @@ export class ContentService {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-    }) as Polls;
+    }) as unknown as ContentRow;
   }
 
   /**
    * Vote on a poll
    */
-  async votePoll(pollId: string, userId: string, optionIndex: number): Promise<Polls> {
+  async votePoll(pollId: string, userId: string, optionIndex: number): Promise<ContentRow> {
     const poll = await tablesDB.getRow({
       databaseId: this.databaseId,
       tableId: CONTENT_COLLECTIONS.POLLS,
       rowId: pollId
-    }) as Polls;
+    }) as unknown as ContentRow;
 
     const voters = poll.voterIds || [];
     if (voters.includes(userId)) {
@@ -238,7 +239,7 @@ export class ContentService {
     const results = poll.results || poll.options.map(() => 0);
     results[optionIndex] = (results[optionIndex] || 0) + 1;
 
-    return await tablesDB.updateRow({
+      return await tablesDB.updateRow({
       databaseId: this.databaseId,
       tableId: CONTENT_COLLECTIONS.POLLS,
       rowId: pollId,
@@ -248,19 +249,19 @@ export class ContentService {
         totalVotes: (poll.totalVotes || 0) + 1,
         updatedAt: new Date().toISOString(),
       }
-    }) as Polls;
+    }) as unknown as ContentRow;
   }
 
   /**
    * Get poll results
    */
-  async getPoll(pollId: string): Promise<Polls | null> {
+  async getPoll(pollId: string): Promise<ContentRow | null> {
     try {
       return await tablesDB.getRow({
         databaseId: this.databaseId,
         tableId: CONTENT_COLLECTIONS.POLLS,
         rowId: pollId
-      }) as Polls;
+      }) as ContentRow;
     } catch (error) {
       console.error('Error getting poll:', error);
       return null;
@@ -272,7 +273,7 @@ export class ContentService {
   /**
    * Get user's media library
    */
-  async getUserMedia(userId: string, mediaType?: string, limit = 50): Promise<MediaLibrary[]> {
+  async getUserMedia(userId: string, mediaType?: string, limit = 50): Promise<ContentRow[]> {
     try {
       const queries = [
         Query.equal('userId', userId),
@@ -289,7 +290,7 @@ export class ContentService {
         tableId: CONTENT_COLLECTIONS.MEDIA_LIBRARY,
         queries,
       });
-      return response.rows as MediaLibrary[];
+      return response.rows as ContentRow[];
     } catch (error) {
       console.error('Error getting user media:', error);
       return [];
@@ -299,7 +300,7 @@ export class ContentService {
   /**
    * Add media to library
    */
-  async addMedia(data: Partial<MediaLibrary>): Promise<MediaLibrary> {
+  async addMedia(data: Partial<ContentRow>): Promise<ContentRow> {
     return await tablesDB.createRow({
       databaseId: this.databaseId,
       tableId: CONTENT_COLLECTIONS.MEDIA_LIBRARY,
@@ -308,7 +309,7 @@ export class ContentService {
         ...data,
         uploadedAt: new Date().toISOString(),
       }
-    }) as MediaLibrary;
+    }) as unknown as ContentRow;
   }
 
   /**

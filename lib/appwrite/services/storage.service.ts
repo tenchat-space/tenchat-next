@@ -37,7 +37,7 @@ export class StorageService {
     fileId: string,
     width?: number,
     height?: number
-  ): Promise<URL> {
+  ): Promise<string> {
     try {
       return storage.getFilePreview(
         bucketId,
@@ -51,7 +51,7 @@ export class StorageService {
     }
   }
 
-  async getFileView(bucketId: string, fileId: string): Promise<URL> {
+  async getFileView(bucketId: string, fileId: string): Promise<string> {
     try {
       return storage.getFileView(bucketId, fileId);
     } catch (error) {
@@ -60,7 +60,7 @@ export class StorageService {
     }
   }
 
-  async getFileDownload(bucketId: string, fileId: string): Promise<URL> {
+  async getFileDownload(bucketId: string, fileId: string): Promise<string> {
     try {
       return storage.getFileDownload(bucketId, fileId);
     } catch (error) {
@@ -72,7 +72,7 @@ export class StorageService {
   /**
    * Convenience: return a direct file URL (alias of getFileView)
    */
-  getFileUrl(bucketId: string, fileId: string): URL {
+  getFileUrl(bucketId: string, fileId: string): string {
     return storage.getFileView(bucketId, fileId);
   }
 

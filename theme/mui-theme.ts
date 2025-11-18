@@ -6,7 +6,6 @@ export const tenchatThemeOptions: ThemeOptions = {
     background: {
       default: '#0c040b',
       paper: '#130b1f',
-      level1: '#1f0d32',
     },
     primary: {
       main: '#7c3aed',
