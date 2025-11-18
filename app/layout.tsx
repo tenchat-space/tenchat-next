@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TenchatThemeProvider } from "@/components/providers/TenchatThemeProvider";
 import { AppwriteProvider } from "@/contexts/AppwriteContext";
+import { WindowSystem } from "@/components/window/WindowSystem";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <TenchatThemeProvider>
-          <AppwriteProvider>{children}</AppwriteProvider>
+          <AppwriteProvider>
+            <WindowSystem>{children}</WindowSystem>
+          </AppwriteProvider>
         </TenchatThemeProvider>
       </body>
     </html>
