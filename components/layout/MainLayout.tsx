@@ -232,6 +232,8 @@ export function MainLayout() {
             display: "flex",
             flexDirection: "column",
             bgcolor: "background.default",
+            backgroundImage:
+              "radial-gradient(circle at top right, rgba(250,204,21,0.15), transparent 55%), linear-gradient(160deg, rgba(124,58,237,0.7), transparent 65%)",
           }}
         >
           <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
@@ -319,18 +321,20 @@ export function MainLayout() {
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            width: 280,
-            bgcolor: "background.paper",
-            borderLeft: 1,
-            borderColor: "divider",
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
+          <Box
+            sx={{
+              width: 280,
+              bgcolor: "background.paper",
+              borderLeft: 1,
+              borderColor: "divider",
+              p: 3,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              backgroundImage:
+                "linear-gradient(120deg, rgba(250,204,21,0.2), rgba(124,58,237,0.1))",
+            }}
+          >
           <Stack direction="row" alignItems="center" spacing={1}>
             <Avatar src="">
               {currentAccount?.name?.[0] || "U"}
