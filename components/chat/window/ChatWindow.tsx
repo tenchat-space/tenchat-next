@@ -3,11 +3,25 @@ import {
   Box,
   Button,
   Divider,
+  IconButton,
   Paper,
   Stack,
   TextField,
   Typography,
+  InputAdornment,
+  Tooltip,
 } from "@mui/material";
+import {
+  AttachFile,
+  Call,
+  EmojiEmotions,
+  Mic,
+  MoreVert,
+  Send,
+  VideoCall,
+  Check,
+  DoneAll,
+} from "@mui/icons-material";
 import { Conversation, useMessages } from "@/hooks/useMessaging";
 
 interface ChatWindowProps {
@@ -61,69 +75,132 @@ export function ChatWindow({
           "radial-gradient(circle at top right, rgba(250,204,21,0.15), transparent 55%), linear-gradient(160deg, rgba(124,58,237,0.7), transparent 65%)",
       }}
     >
-      <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
+      {/* Chat Header */}
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", backdropFilter: "blur(10px)", bgcolor: "rgba(12, 4, 11, 0.5)" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack>
-            <Typography variant="h5" sx={{ color: "secondary.main" }}>
+            <Typography variant="h6" sx={{ color: "secondary.main", fontWeight: 600 }}>
               {conversation ? formatConversationLabel(conversation) : "Welcome to Tenchat"}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {isAuthenticated ? "Encrypted chat" : "Connect to your wallet to unlock messaging"}
+            <Typography variant="caption" color="text.secondary">
+              {isAuthenticated 
+                ? conversation ? "Encrypted • Online" : "Secure Messaging"
+                : "Connect wallet to start"}
             </Typography>
           </Stack>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={onConnect}
-            disabled={isAuthenticated}
-          >
-            {isAuthenticated ? "Connected" : "Connect"}
-          </Button>
+          
+          <Stack direction="row" spacing={1}>
+            {conversation && isAuthenticated && (
+              <>
+                <Tooltip title="Voice Call">
+                  <IconButton color="secondary">
+                    <Call />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Video Call">
+                  <IconButton color="secondary">
+                    <VideoCall />
+                  </IconButton>
+                </Tooltip>
+                <IconButton color="default">
+                  <MoreVert />
+                </IconButton>
+              </>
+            )}
+            {!isAuthenticated && (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={onConnect}
+                size="small"
+              >
+                Connect Wallet
+              </Button>
+            )}
+          </Stack>
         </Stack>
       </Box>
 
+      {/* Messages Area */}
       <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3, display: "flex", flexDirection: "column-reverse" }}>
           {isLoading ? (
-            <Typography color="text.secondary">Loading messages...</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+               <Typography color="text.secondary">Loading secure messages...</Typography>
+            </Box>
           ) : messages.length === 0 ? (
-            <Typography color="text.secondary">
-              {conversation ? "No messages yet. Say hello!" : "Select a conversation to begin."}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>
+              <Box sx={{ fontSize: 64, mb: 2 }}>🔐</Box>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No messages here yet
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Send a message to start an encrypted conversation.
+              </Typography>
+            </Box>
           ) : (
-            <Stack spacing={2}>
+            <Stack spacing={2} direction="column-reverse">
               {messages.map((message) => {
                 const isSelf = message.senderId === currentUserId;
                 return (
-                  <Paper
+                  <Box
                     key={message.$id}
                     sx={{
-                      p: 2,
-                      bgcolor: isSelf ? "primary.main" : "secondary.main",
-                      color: isSelf ? "primary.contrastText" : "secondary.contrastText",
                       alignSelf: isSelf ? "flex-end" : "flex-start",
                       maxWidth: "70%",
-                      boxShadow: "0 5px 20px rgba(7,3,18,0.4)",
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: isSelf ? 'flex-end' : 'flex-start'
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {isSelf ? "You" : message.senderId}
-                    </Typography>
-                    <Typography>{message.content}</Typography>
-                  </Paper>
+                    <Paper
+                      sx={{
+                        p: 2,
+                        px: 2.5,
+                        bgcolor: isSelf ? "primary.main" : "rgba(255,255,255,0.05)",
+                        color: isSelf ? "primary.contrastText" : "text.primary",
+                        borderRadius: isSelf ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        position: 'relative',
+                        backgroundImage: isSelf ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'none',
+                        border: isSelf ? 'none' : '1px solid rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      {!isSelf && (
+                        <Typography variant="caption" sx={{ color: "secondary.main", fontWeight: 600, display: 'block', mb: 0.5 }}>
+                          {message.senderId}
+                        </Typography>
+                      )}
+                      <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                        {message.content}
+                      </Typography>
+                      
+                      <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.5} sx={{ mt: 0.5, opacity: 0.7 }}>
+                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                          10:30 AM
+                        </Typography>
+                        {isSelf && (
+                           <DoneAll sx={{ fontSize: 14 }} />
+                        )}
+                      </Stack>
+                    </Paper>
+                  </Box>
                 );
               })}
             </Stack>
           )}
         </Box>
 
-        <Divider />
-
-        <Box sx={{ p: 2 }}>
-          <Stack direction="row" spacing={2}>
+        {/* Input Area */}
+        <Box sx={{ p: 2, bgcolor: "background.paper", borderTop: 1, borderColor: "divider" }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <IconButton color="secondary" disabled={!conversation}>
+              <AttachFile />
+            </IconButton>
+            
             <TextField
               fullWidth
-              placeholder="Write a secure message..."
+              placeholder="Write a message..."
               value={composer}
               onChange={(event) => setComposer(event.target.value)}
               onKeyDown={(event) => {
@@ -133,24 +210,56 @@ export function ChatWindow({
                 }
               }}
               disabled={!conversation || !isAuthenticated}
+              variant="outlined"
+              size="medium"
+              multiline
+              maxRows={4}
               sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.03)",
-                borderRadius: 2,
-                border: "1px solid rgba(250, 204, 21, 0.3)",
+                "& .MuiOutlinedInput-root": {
+                  bgcolor: "rgba(255,255,255,0.03)",
+                  borderRadius: 3,
+                  "& fieldset": { borderColor: "rgba(255,255,255,0.1)" },
+                  "&:hover fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                  "&.Mui-focused fieldset": { borderColor: "secondary.main" }
+                }
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" disabled={!conversation} color="inherit">
+                      <EmojiEmotions />
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
             />
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleSendMessage}
-              disabled={!conversation || !isAuthenticated}
-            >
-              Send
-            </Button>
+            
+            {composer.trim() ? (
+              <IconButton 
+                color="secondary" 
+                onClick={handleSendMessage}
+                disabled={!conversation || !isAuthenticated}
+                sx={{ 
+                  bgcolor: 'rgba(250, 204, 21, 0.1)', 
+                  '&:hover': { bgcolor: 'rgba(250, 204, 21, 0.2)' },
+                  width: 48,
+                  height: 48 
+                }}
+              >
+                <Send />
+              </IconButton>
+            ) : (
+              <IconButton 
+                color="default" 
+                disabled={!conversation}
+                sx={{ width: 48, height: 48 }}
+              >
+                <Mic />
+              </IconButton>
+            )}
           </Stack>
         </Box>
       </Box>
     </Box>
   );
 }
-

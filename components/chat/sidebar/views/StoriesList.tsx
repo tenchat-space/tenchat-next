@@ -18,7 +18,11 @@ const MOCK_STORIES = [
   { id: "4", name: "Charlie Da", time: "5h ago", viewed: true },
 ];
 
-export function StoriesList() {
+interface StoriesListProps {
+  onViewStory: (id: string) => void;
+}
+
+export function StoriesList({ onViewStory }: StoriesListProps) {
   return (
     <SidebarPanel
       title="Stories"
@@ -31,7 +35,7 @@ export function StoriesList() {
     >
       <List>
         {MOCK_STORIES.map((story) => (
-          <ListItemButton key={story.id}>
+          <ListItemButton key={story.id} onClick={() => !story.isUser && onViewStory(story.id)}>
             <ListItemAvatar>
               <Box sx={{ position: "relative" }}>
                 <Avatar
@@ -86,4 +90,3 @@ export function StoriesList() {
     </SidebarPanel>
   );
 }
-

@@ -9,7 +9,11 @@ import { MainSidebar } from "@/components/navigation/MainSidebar";
 import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
 import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
+import { WalletPanel } from "@/components/chat/info/WalletPanel";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
+import { NewChatDialog } from "@/components/chat/dialogs/NewChatDialog";
+import { CreateChannelDialog } from "@/components/chat/dialogs/CreateChannelDialog";
+import { StoryViewer } from "@/components/chat/window/StoryViewer";
 
 // Views
 import { StoriesList } from "@/components/chat/sidebar/views/StoriesList";
@@ -27,8 +31,13 @@ export function MainLayout() {
   const [activeLeftId, setActiveLeftId] = useState("chats");
   const [activeRightId, setActiveRightId] = useState("profile");
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  
+  // Dialog states
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [createChannelOpen, setCreateChannelOpen] = useState(false);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
 
   // Fetch conversations
   const { conversations, isLoading: convLoading } = useConversations(legacyUserId);
@@ -65,11 +74,11 @@ export function MainLayout() {
           />
         );
       case 'stories':
-        return <StoriesList />;
+        return <StoriesList onViewStory={() => setStoryViewerOpen(true)} />;
       case 'channels':
-        return <ChannelList />;
+        return <ChannelList onCreateChannel={() => setCreateChannelOpen(true)} />;
       case 'contacts':
-        return <ContactList />;
+        return <ContactList onAddContact={() => setNewChatOpen(true)} />;
       case 'calls':
         return <CallHistory />;
       default:
@@ -120,6 +129,7 @@ export function MainLayout() {
           onConnect={() => setAuthDialogOpen(true)}
         />
 
+        {/* Right Panel Area */}
         {activeRightId === 'profile' && (
             <ProfilePanel
               currentAccount={currentAccount}
@@ -127,13 +137,33 @@ export function MainLayout() {
               onOpenSettings={() => setSettingsOpen(true)}
             />
         )}
+        {activeRightId === 'wallet' && (
+            <WalletPanel />
+        )}
       </Box>
 
+      {/* Dialogs and Overlays */}
       <AuthDialog open={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
+      
       <SettingsDialog 
         open={settingsOpen} 
         onClose={() => setSettingsOpen(false)} 
         currentUser={currentAccount} 
+      />
+
+      <NewChatDialog 
+        open={newChatOpen}
+        onClose={() => setNewChatOpen(false)}
+      />
+
+      <CreateChannelDialog 
+        open={createChannelOpen}
+        onClose={() => setCreateChannelOpen(false)}
+      />
+
+      <StoryViewer 
+        open={storyViewerOpen}
+        onClose={() => setStoryViewerOpen(false)}
       />
     </>
   );

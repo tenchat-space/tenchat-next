@@ -15,13 +15,17 @@ const MOCK_CHANNELS = [
   { id: "3", name: "AI Research", subscribers: "8.9K", description: "Latest in LLMs" },
 ];
 
-export function ChannelList() {
+interface ChannelListProps {
+  onCreateChannel: () => void;
+}
+
+export function ChannelList({ onCreateChannel }: ChannelListProps) {
   return (
     <SidebarPanel
       title="Channels"
       subtitle="Broadcasts & Communities"
       actions={
-        <Button startIcon={<Add />} size="small" variant="text" color="secondary">
+        <Button startIcon={<Add />} size="small" variant="text" color="secondary" onClick={onCreateChannel}>
           New
         </Button>
       }
@@ -45,4 +49,3 @@ export function ChannelList() {
     </SidebarPanel>
   );
 }
-

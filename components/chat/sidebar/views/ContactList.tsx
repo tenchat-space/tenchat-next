@@ -16,13 +16,17 @@ const MOCK_CONTACTS = [
   { id: "4", name: "David Jones", status: "online" },
 ];
 
-export function ContactList() {
+interface ContactListProps {
+  onAddContact: () => void;
+}
+
+export function ContactList({ onAddContact }: ContactListProps) {
   return (
     <SidebarPanel
       title="Contacts"
       subtitle={`${MOCK_CONTACTS.length} contacts`}
       actions={
-        <Button startIcon={<PersonAdd />} size="small" variant="text" color="secondary">
+        <Button startIcon={<PersonAdd />} size="small" variant="text" color="secondary" onClick={onAddContact}>
           Add
         </Button>
       }
@@ -46,4 +50,3 @@ export function ContactList() {
     </SidebarPanel>
   );
 }
-
