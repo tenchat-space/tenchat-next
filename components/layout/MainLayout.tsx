@@ -148,6 +148,7 @@ export function MainLayout() {
             px: 1,
             py: 2,
             alignItems: "center",
+            backgroundImage: "linear-gradient(180deg, rgba(250,204,21,0.15), transparent)",
           }}
         >
           {leftItems.map((item) => (
@@ -173,15 +174,33 @@ export function MainLayout() {
           ))}
         </Stack>
 
-        <Box sx={{ width: 320, bgcolor: "background.paper", borderRight: 1, borderColor: "divider" }}>
+        <Box
+          sx={{
+            width: 320,
+            bgcolor: "background.paper",
+            borderRight: 1,
+            borderColor: "divider",
+            backgroundImage: "linear-gradient(180deg, rgba(124,58,237,0.15), rgba(15,23,42,0.95))",
+          }}
+        >
           <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-            <Typography variant="h6">Conversations</Typography>
+            <Typography variant="h6" sx={{ color: "secondary.main" }}>
+              Conversations
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {conversations.length} chats
             </Typography>
           </Box>
 
-          <List sx={{ maxHeight: "calc(100dvh - 120px)", overflow: "auto" }}>
+          <List
+            sx={{
+              maxHeight: "calc(100dvh - 120px)",
+              overflow: "auto",
+              backgroundColor: "background.paper",
+              borderRadius: 2,
+              boxShadow: "0 10px 30px rgba(7,3,18,0.6)",
+            }}
+          >
             {convLoading ? (
               <Typography sx={{ p: 2 }} color="text.secondary">
                 Loading conversations...
@@ -225,13 +244,14 @@ export function MainLayout() {
                   {isAuthenticated ? "Encrypted chat" : "Connect to your wallet to unlock messaging"}
                 </Typography>
               </Stack>
-              <Button
-                variant="outlined"
-                onClick={() => setAuthDialogOpen(true)}
-                disabled={isAuthenticated}
-              >
-                {isAuthenticated ? "Connected" : "Connect"}
-              </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => setAuthDialogOpen(true)}
+            disabled={isAuthenticated}
+          >
+            {isAuthenticated ? "Connected" : "Connect"}
+          </Button>
             </Stack>
           </Box>
 
@@ -282,9 +302,9 @@ export function MainLayout() {
                     }
                   }}
                 />
-                <Button variant="contained" onClick={handleSendMessage}>
-                  Send
-                </Button>
+              <Button variant="contained" color="secondary" onClick={handleSendMessage}>
+                Send
+              </Button>
               </Stack>
             </Box>
           </Box>
@@ -326,11 +346,13 @@ export function MainLayout() {
           <Divider />
 
           <Stack spacing={1}>
-            <Typography variant="subtitle2">Right panel quick actions</Typography>
-            <Button fullWidth variant="contained">
+            <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>
+              Right panel quick actions
+            </Typography>
+            <Button fullWidth variant="contained" color="secondary">
               Create channel
             </Button>
-            <Button fullWidth variant="outlined">
+            <Button fullWidth variant="outlined" sx={{ borderColor: "secondary.main", color: "secondary.main" }}>
               Wallet / NFTs
             </Button>
           </Stack>
