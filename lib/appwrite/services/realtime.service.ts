@@ -1,3 +1,4 @@
+import { RealtimeResponseEvent } from 'appwrite';
 import { client } from '../config/client';
 import { DATABASE_IDS, CHAT_TABLES } from '../config/constants';
 
@@ -5,8 +6,8 @@ export class RealtimeService {
   /**
    * Subscribe to user's conversations.
    */
-  subscribeToConversations(callback: (event: any) => void) {
-    return client.subscribe(
+  subscribeToConversations<T extends object>(callback: (event: RealtimeResponseEvent<T>) => void) {
+    return client.subscribe<T>(
       `databases.${DATABASE_IDS.CHAT}.collections.${CHAT_TABLES.CONVERSATIONS}.documents`,
       callback
     );
@@ -15,12 +16,11 @@ export class RealtimeService {
   /**
    * Subscribe to messages within a conversation.
    */
-  subscribeToMessages(conversationId: string, callback: (event: any) => void) {
-    return client.subscribe(
+  subscribeToMessages<T extends { conversationId: string }>(conversationId: string, callback: (event: RealtimeResponseEvent<T>) => void) {
+    return client.subscribe<T>(
       `databases.${DATABASE_IDS.CHAT}.collections.${CHAT_TABLES.MESSAGES}.documents`,
       (response) => {
-        const message = response.payload as any;
-        if (message.conversationId === conversationId) {
+        if (response.payload.conversationId === conversationId) {
           callback(response);
         }
       }
@@ -30,12 +30,11 @@ export class RealtimeService {
   /**
    * Subscribe to typing indicators for a conversation.
    */
-  subscribeToTyping(conversationId: string, callback: (event: any) => void) {
-    return client.subscribe(
+  subscribeToTyping<T extends { conversationId: string }>(conversationId: string, callback: (event: RealtimeResponseEvent<T>) => void) {
+    return client.subscribe<T>(
       `databases.${DATABASE_IDS.CHAT}.collections.${CHAT_TABLES.TYPING_INDICATORS}.documents`,
       (response) => {
-        const indicator = response.payload as any;
-        if (indicator.conversationId === conversationId) {
+        if (response.payload.conversationId === conversationId) {
           callback(response);
         }
       }

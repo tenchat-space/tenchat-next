@@ -21,6 +21,12 @@ export interface ChatMessage {
   contentType?: string;
 }
 
+export interface TypingIndicator {
+  isTyping: boolean;
+  userId: string;
+  conversationId: string;
+}
+
 export function useConversations(userId: string) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,8 +52,8 @@ export function useConversations(userId: string) {
     loadConversations();
 
     // Subscribe to real-time updates
-    const unsubscribe = realtimeService.subscribeToConversations((event) => {
-        const conversation = event.payload as Conversation;
+    const unsubscribe = realtimeService.subscribeToConversations<Conversation>((event) => {
+        const conversation = event.payload;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setConversations(prev => [conversation, ...prev]);
@@ -132,8 +138,8 @@ export function useMessages(conversationId: string) {
     loadMessages();
 
     // Subscribe to real-time message updates
-    const unsubscribe = realtimeService.subscribeToMessages(conversationId, (event) => {
-      const message = event.payload as ChatMessage;
+    const unsubscribe = realtimeService.subscribeToMessages<ChatMessage>(conversationId, (event) => {
+      const message = event.payload;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setMessages(prev => [...prev, message]);
@@ -196,7 +202,7 @@ export function useTypingIndicator(conversationId: string, userId: string) {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
   useEffect(() => {
-    const unsubscribe = realtimeService.subscribeToTyping(conversationId, (event) => {
+    const unsubscribe = realtimeService.subscribeToTyping<TypingIndicator>(conversationId, (event) => {
       const indicator = event.payload;
       
       if (indicator.isTyping && indicator.userId !== userId) {
