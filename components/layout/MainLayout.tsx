@@ -305,6 +305,11 @@ export function MainLayout() {
                       handleSendMessage();
                     }
                   }}
+                  sx={{
+                    backgroundColor: "rgba(255, 255, 255, 0.03)",
+                    borderRadius: 2,
+                    border: "1px solid rgba(250, 204, 21, 0.3)",
+                  }}
                 />
               <Button variant="contained" color="secondary" onClick={handleSendMessage}>
                 Send
