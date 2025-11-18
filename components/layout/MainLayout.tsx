@@ -237,21 +237,21 @@ export function MainLayout() {
           <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Stack>
-                <Typography variant="h5">
+                <Typography variant="h5" sx={{ color: "secondary.main" }}>
                   {conversation ? formatConversationLabel(conversation) : "Welcome to Tenchat"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {isAuthenticated ? "Encrypted chat" : "Connect to your wallet to unlock messaging"}
                 </Typography>
               </Stack>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => setAuthDialogOpen(true)}
-            disabled={isAuthenticated}
-          >
-            {isAuthenticated ? "Connected" : "Connect"}
-          </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setAuthDialogOpen(true)}
+                disabled={isAuthenticated}
+              >
+                {isAuthenticated ? "Connected" : "Connect"}
+              </Button>
             </Stack>
           </Box>
 
@@ -265,24 +265,28 @@ export function MainLayout() {
                 </Typography>
               ) : (
                 <Stack spacing={2}>
-                  {messages.map((message) => (
-                    <Paper
-                      key={message.$id}
-                      sx={{
-                        p: 2,
-                        bgcolor: message.senderId === legacyUser?.id ? "primary.main" : "background.paper",
-                        color: message.senderId === legacyUser?.id ? "primary.contrastText" : "text.primary",
-                        alignSelf: message.senderId === legacyUser?.id ? "flex-end" : "flex-start",
-                        maxWidth: "70%",
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {message.senderId === legacyUser?.id ? "You" : message.senderId}
-                      </Typography>
-                      <Typography>{message.content}</Typography>
-                    </Paper>
-                  ))}
-                </Stack>
+              {messages.map((message) => {
+                const isSelf = message.senderId === legacyUser?.id;
+                return (
+                  <Paper
+                    key={message.$id}
+                    sx={{
+                      p: 2,
+                      bgcolor: isSelf ? "primary.main" : "secondary.main",
+                      color: isSelf ? "primary.contrastText" : "secondary.contrastText",
+                      alignSelf: isSelf ? "flex-end" : "flex-start",
+                      maxWidth: "70%",
+                      boxShadow: "0 5px 20px rgba(7,3,18,0.4)",
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {isSelf ? "You" : message.senderId}
+                    </Typography>
+                    <Typography>{message.content}</Typography>
+                  </Paper>
+                );
+              })}
+            </Stack>
               )}
             </Box>
 
