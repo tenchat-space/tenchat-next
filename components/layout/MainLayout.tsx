@@ -27,8 +27,7 @@ import {
   WalletOutlined,
 } from "@mui/icons-material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
-import { useConversations, useMessages } from "@/hooks/useMessaging";
-import { Conversations } from "@/types/appwrite.d";
+import { useConversations, useMessages, type Conversation } from "@/hooks/useMessaging";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 
 interface SidebarItem {
@@ -59,7 +58,9 @@ export function MainLayout() {
       id: currentAccount?.$id || currentUser?.id || "",
       displayName: currentAccount?.name || currentUser?.displayName || "Tenchat User",
       createdAt: currentAccount?.$createdAt ? new Date(currentAccount.$createdAt) : new Date(),
-      lastSeen: currentUser?.lastSeen ? new Date(currentUser.lastSeen) : new Date(),
+      lastSeen: currentUser && "lastSeen" in currentUser
+        ? new Date(currentUser.lastSeen as string)
+        : new Date(),
       identity: currentAccount
         ? {
             id: currentAccount.$id,
@@ -80,7 +81,7 @@ export function MainLayout() {
 
   const [activeLeftId, setActiveLeftId] = useState("chats");
   const [activeRightId, setActiveRightId] = useState("profile");
-  const [selectedConversation, setSelectedConversation] = useState<Conversations | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const { conversations, isLoading: convLoading } = useConversations(legacyUser?.id || "");
@@ -99,7 +100,7 @@ export function MainLayout() {
     }
   }, [isAuthenticated, isLoading]);
 
-  const handleSelectConversation = (conv: Conversations) => {
+  const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
   };
 
@@ -118,7 +119,7 @@ export function MainLayout() {
     }
   };
 
-  const formatConversationLabel = (conv: Conversations) => {
+  const formatConversationLabel = (conv: Conversation) => {
     if (conv.name) return conv.name;
     if (conv.participantIds?.length === 2) {
       const other = conv.participantIds.find((id) => id !== legacyUser?.id);

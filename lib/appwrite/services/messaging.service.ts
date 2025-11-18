@@ -6,14 +6,14 @@
 import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, CHAT_TABLES } from '../config/constants';
-import type { Conversations, Messages, ContentType } from '@/types/appwrite.d';
 import type { Models } from 'appwrite';
 
 // Extended Conversation interface
 export interface Conversation extends Models.Document {
   type: 'direct' | 'group' | 'channel' | 'broadcast' | 'community';
-  name?: string;
-  description?: string;
+  name?: string | null;
+  description?: string | null;
+  lastMessageText?: string | null;
   creatorId: string;
   participantIds: string[];
   adminIds: string[];
@@ -28,7 +28,7 @@ export interface Message extends Models.Document {
   conversationId: string;
   senderId: string;
   content: string;
-  contentType: ContentType | string;
+  contentType: string;
   status?: string;
   metadata?: Record<string, any>;
   replyToId?: string;

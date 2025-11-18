@@ -5,10 +5,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { messagingService, realtimeService } from '@/lib/appwrite';
-import type { Conversations, Messages } from '@/types/appwrite.d';
+
+export interface Conversation {
+  $id: string;
+  name?: string | null;
+  participantIds?: string[];
+  lastMessageText?: string | null;
+}
+
+export interface ChatMessage {
+  $id: string;
+  senderId: string;
+  content: string;
+  conversationId: string;
+}
 
 export function useConversations(userId: string) {
-  const [conversations, setConversations] = useState<Conversations[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -33,7 +46,7 @@ export function useConversations(userId: string) {
 
     // Subscribe to real-time updates
     const unsubscribe = realtimeService.subscribeToConversations((event) => {
-      const conversation = event.payload as Conversations;
+        const conversation = event.payload as Conversation;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setConversations(prev => [conversation, ...prev]);
@@ -51,7 +64,7 @@ export function useConversations(userId: string) {
     };
   }, [loadConversations]);
 
-  const createConversation = useCallback(async (data: Partial<Conversations>) => {
+  const createConversation = useCallback(async (data: Partial<Conversation>) => {
     try {
       const newConv = await messagingService.createConversation(data);
       setConversations(prev => [newConv, ...prev]);
@@ -119,7 +132,7 @@ export function useMessages(conversationId: string) {
 
     // Subscribe to real-time message updates
     const unsubscribe = realtimeService.subscribeToMessages(conversationId, (event) => {
-      const message = event.payload as Messages;
+        const message = event.payload as ChatMessage;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
         setMessages(prev => [...prev, message]);

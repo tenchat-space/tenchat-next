@@ -26,7 +26,7 @@ const buildAuthUrl = () => {
   return `https://${subdomain}.${domain}`;
 };
 
-export function AuthDialog({ open, onClose, onSuccess }: AuthDialogProps) {
+export function AuthDialog({ open, onClose }: AuthDialogProps) {
   const windowRef = useRef<Window | null>(null);
 
   const openWindow = () => {
