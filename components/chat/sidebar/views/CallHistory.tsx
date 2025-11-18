@@ -6,10 +6,15 @@ import {
   ListItemText,
   Stack,
   Typography,
+  Paper,
+  MenuList,
+  MenuItem,
+  ListItemIcon,
 } from "@mui/material";
-import { Call, VideoCall } from "@mui/icons-material";
+import { Call, VideoCall, OpenInNew } from "@mui/icons-material";
 import { SidebarPanel } from "./SidebarPanel";
 import { useWindowBridge } from "@/hooks/useWindowBridge";
+import { useContextMenu } from "@/contexts/ContextMenuContext";
 
 const MOCK_CALLS = [
   { id: "1", name: "Alice Chen", time: "Today, 10:30 AM", type: "voice", status: "missed" },
@@ -19,6 +24,7 @@ const MOCK_CALLS = [
 
 export function CallHistory() {
   const { openCallWindow } = useWindowBridge();
+  const { showMenu, hideMenu } = useContextMenu();
 
   const handleOpenCall = (call: (typeof MOCK_CALLS)[number]) => {
     openCallWindow({
@@ -33,7 +39,28 @@ export function CallHistory() {
     <SidebarPanel title="Calls" subtitle="Encrypted Voice & Video">
       <List>
         {MOCK_CALLS.map((call) => (
-          <ListItemButton key={call.id} onClick={() => handleOpenCall(call)}>
+          <ListItemButton 
+            key={call.id} 
+            onClick={() => handleOpenCall(call)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              showMenu(e.clientX, e.clientY, (
+                <Paper sx={{ width: 220, maxWidth: '100%' }} elevation={4}>
+                  <MenuList>
+                    <MenuItem onClick={() => {
+                      handleOpenCall(call);
+                      hideMenu();
+                    }}>
+                      <ListItemIcon>
+                        <OpenInNew fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Open in New Window</ListItemText>
+                    </MenuItem>
+                  </MenuList>
+                </Paper>
+              ));
+            }}
+          >
             <ListItemAvatar>
               <Avatar>{call.name[0]}</Avatar>
             </ListItemAvatar>

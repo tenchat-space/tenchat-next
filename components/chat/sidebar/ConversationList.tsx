@@ -5,11 +5,16 @@ import {
   Fab,
   IconButton,
   Stack,
+  Paper,
+  MenuList,
+  MenuItem,
+  ListItemIcon,
 } from "@mui/material";
 import { Edit, OpenInNew } from "@mui/icons-material";
 import { Conversation } from "@/hooks/useMessaging";
 import { SidebarPanel } from "./views/SidebarPanel";
 import { useWindowBridge } from "@/hooks/useWindowBridge";
+import { useContextMenu } from "@/contexts/ContextMenuContext";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -39,6 +44,7 @@ export function ConversationList({
     return "Tenchat room";
   };
   const { openChatWindow } = useWindowBridge();
+  const { showMenu, hideMenu } = useContextMenu();
 
   return (
     <SidebarPanel
@@ -64,6 +70,29 @@ export function ConversationList({
             key={conv.$id}
             selected={selectedConversation?.$id === conv.$id}
             onClick={() => onSelectConversation(conv)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              showMenu(e.clientX, e.clientY, (
+                <Paper sx={{ width: 220, maxWidth: '100%' }} elevation={4}>
+                  <MenuList>
+                    <MenuItem onClick={() => {
+                      openChatWindow({
+                        conversation: conv,
+                        currentUserId: legacyUserId || '',
+                        isAuthenticated,
+                        onConnect,
+                      });
+                      hideMenu();
+                    }}>
+                      <ListItemIcon>
+                        <OpenInNew fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Open in New Window</ListItemText>
+                    </MenuItem>
+                  </MenuList>
+                </Paper>
+              ));
+            }}
           >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
                     <ListItemText

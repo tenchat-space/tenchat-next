@@ -41,12 +41,29 @@ export const ContextMenuProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
+    const handleContextMenu = (event: MouseEvent) => {
+      // Allow default context menu on inputs/textareas for copy/paste
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+      
+      // Prevent default browser context menu globally
+      event.preventDefault();
+      
+      // We could show a default app menu here if we wanted, 
+      // but for now we just disable the browser one to give a native feel
+      // and let specific components handle their own menus via useContextMenu
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
     };
   }, []);
 
