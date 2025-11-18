@@ -22,9 +22,10 @@ import { Models } from "appwrite";
 interface ProfilePanelProps {
   currentAccount: Models.User<Models.Preferences> | null;
   logout: () => Promise<void>;
+  onOpenSettings: () => void;
 }
 
-export function ProfilePanel({ currentAccount, logout }: ProfilePanelProps) {
+export function ProfilePanel({ currentAccount, logout, onOpenSettings }: ProfilePanelProps) {
   return (
     <Box
       sx={{
@@ -57,7 +58,7 @@ export function ProfilePanel({ currentAccount, logout }: ProfilePanelProps) {
             {currentAccount?.email || "Sign in to sync"}
           </Typography>
         </Box>
-        <IconButton onClick={logout} size="small">
+        <IconButton onClick={onOpenSettings} size="small">
           <SettingsOutlined fontSize="small" />
         </IconButton>
       </Stack>

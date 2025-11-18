@@ -9,6 +9,7 @@ import { MainSidebar } from "@/components/navigation/MainSidebar";
 import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
 import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
+import { SettingsDialog } from "@/components/settings/SettingsDialog";
 
 // Views
 import { StoriesList } from "@/components/chat/sidebar/views/StoriesList";
@@ -27,6 +28,7 @@ export function MainLayout() {
   const [activeRightId, setActiveRightId] = useState("profile");
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Fetch conversations
   const { conversations, isLoading: convLoading } = useConversations(legacyUserId);
@@ -99,7 +101,13 @@ export function MainLayout() {
           activeLeftId={activeLeftId}
           setActiveLeftId={setActiveLeftId}
           activeRightId={activeRightId}
-          setActiveRightId={setActiveRightId}
+          setActiveRightId={(id) => {
+            if (id === 'settings') {
+                setSettingsOpen(true);
+            } else {
+                setActiveRightId(id);
+            }
+          }}
         />
 
         {/* List Panel Area */}
@@ -112,13 +120,21 @@ export function MainLayout() {
           onConnect={() => setAuthDialogOpen(true)}
         />
 
-        <ProfilePanel
-          currentAccount={currentAccount}
-          logout={logout}
-        />
+        {activeRightId === 'profile' && (
+            <ProfilePanel
+              currentAccount={currentAccount}
+              logout={logout}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+        )}
       </Box>
 
       <AuthDialog open={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
+      <SettingsDialog 
+        open={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+        currentUser={currentAccount} 
+      />
     </>
   );
 }

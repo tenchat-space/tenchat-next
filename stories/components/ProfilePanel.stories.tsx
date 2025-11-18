@@ -29,6 +29,7 @@ export const Authenticated: Story = {
   args: {
     currentAccount: mockAccount,
     logout: async () => console.log('Logout clicked'),
+    onOpenSettings: () => console.log('Open Settings clicked'),
   },
 };
 
@@ -36,6 +37,6 @@ export const Guest: Story = {
   args: {
     currentAccount: null,
     logout: async () => {},
+    onOpenSettings: () => console.log('Open Settings clicked'),
   },
 };
-
