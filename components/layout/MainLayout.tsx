@@ -1,82 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-import {
-  BookmarkOutlined,
-  ChatBubbleOutline,
-  GroupsOutlined,
-  NotificationsNone,
-  PersonAddOutlined,
-  PersonOutline,
-  SettingsOutlined,
-  WalletOutlined,
-} from "@mui/icons-material";
+import { Box } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
-import { useConversations, useMessages, type Conversation } from "@/hooks/useMessaging";
+import { useConversations, type Conversation } from "@/hooks/useMessaging";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-
-interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const leftItems: SidebarItem[] = [
-  { id: "chats", label: "Chats", icon: <ChatBubbleOutline /> },
-  { id: "stories", label: "Stories", icon: <BookmarkOutlined /> },
-  { id: "channels", label: "Channels", icon: <GroupsOutlined /> },
-  { id: "contacts", label: "Contacts", icon: <PersonAddOutlined /> },
-  { id: "calls", label: "Calls", icon: <NotificationsNone /> },
-];
-
-const rightItems: SidebarItem[] = [
-  { id: "profile", label: "Profile", icon: <PersonOutline /> },
-  { id: "wallet", label: "Wallet", icon: <WalletOutlined /> },
-  { id: "settings", label: "Settings", icon: <SettingsOutlined /> },
-];
+import { MainSidebar } from "@/components/navigation/MainSidebar";
+import { ConversationList } from "@/components/chat/sidebar/ConversationList";
+import { ChatWindow } from "@/components/chat/window/ChatWindow";
+import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
 
 export function MainLayout() {
   const { currentAccount, currentUser, isAuthenticated, isLoading, logout } = useAppwrite();
-  const legacyUser = useMemo(() => {
-    if (!currentAccount && !currentUser) return null;
-    return {
-      id: currentAccount?.$id || currentUser?.id || "",
-      displayName: currentAccount?.name || currentUser?.displayName || "Tenchat User",
-      createdAt: currentAccount?.$createdAt ? new Date(currentAccount.$createdAt) : new Date(),
-      lastSeen: currentUser && "lastSeen" in currentUser
-        ? new Date(currentUser.lastSeen as string)
-        : new Date(),
-      identity: currentAccount
-        ? {
-            id: currentAccount.$id,
-            publicKey: "",
-            identityKey: "",
-            signedPreKey: "",
-            oneTimePreKeys: [],
-          }
-        : {
-            id: currentUser?.id || "",
-            publicKey: "",
-            identityKey: "",
-            signedPreKey: "",
-            oneTimePreKeys: [],
-          },
-    };
+
+  // Prepare legacy user object for compatibility if needed,
+  // though we try to use IDs directly where possible.
+  const legacyUserId = useMemo(() => {
+    return currentAccount?.$id || currentUser?.id || "";
   }, [currentAccount, currentUser]);
 
   const [activeLeftId, setActiveLeftId] = useState("chats");
@@ -84,48 +24,29 @@ export function MainLayout() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
-  const { conversations, isLoading: convLoading } = useConversations(legacyUser?.id || "");
+  // Fetch conversations
+  const { conversations, isLoading: convLoading } = useConversations(legacyUserId);
+
+  // Determine active conversation
   const conversation = useMemo(
     () => selectedConversation || conversations[0] || null,
     [selectedConversation, conversations]
   );
 
-  const { messages, isLoading: messagesLoading, sendMessage } = useMessages(conversation?.$id || "");
-
-  const [composer, setComposer] = useState("");
-
+  // Handle Auth Dialog
   useEffect(() => {
-    if (!isLoading) {
-      setAuthDialogOpen(!isAuthenticated);
+    // Only show dialog if loading is done and user is not authenticated.
+    // We use a timeout to avoid immediate flash or conflict with hydration if needed,
+    // but here we just trust the isLoading flag.
+    if (!isLoading && !isAuthenticated) {
+        setAuthDialogOpen(true);
+    } else if (isAuthenticated) {
+        setAuthDialogOpen(false);
     }
   }, [isAuthenticated, isLoading]);
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
-  };
-
-  const handleSendMessage = async () => {
-    if (!conversation || !composer.trim()) return;
-    try {
-      await sendMessage({
-        conversationId: conversation.$id,
-        senderId: legacyUser?.id || "",
-        content: composer.trim(),
-        contentType: "text",
-      });
-      setComposer("");
-    } catch (error) {
-      console.error("Message send failed", error);
-    }
-  };
-
-  const formatConversationLabel = (conv: Conversation) => {
-    if (conv.name) return conv.name;
-    if (conv.participantIds?.length === 2) {
-      const other = conv.participantIds.find((id) => id !== legacyUser?.id);
-      return other || "Direct chat";
-    }
-    return "Tenchat room";
   };
 
   return (
@@ -139,242 +60,35 @@ export function MainLayout() {
           bgcolor: "background.default",
         }}
       >
-        <Stack
-          spacing={2}
-          sx={{
-            width: 88,
-            bgcolor: "background.paper",
-            borderRight: 1,
-            borderColor: "divider",
-            px: 1,
-            py: 2,
-            alignItems: "center",
-            backgroundImage: "linear-gradient(180deg, rgba(250,204,21,0.15), transparent)",
-          }}
-        >
-          {leftItems.map((item) => (
-            <IconButton
-              key={item.id}
-              color={activeLeftId === item.id ? "primary" : "default"}
-              onClick={() => setActiveLeftId(item.id)}
-              size="large"
-            >
-              {item.icon}
-            </IconButton>
-          ))}
-          <Divider flexItem sx={{ mt: 2 }} />
-          {rightItems.map((item) => (
-            <IconButton
-              key={item.id}
-              color={activeRightId === item.id ? "primary" : "default"}
-              onClick={() => setActiveRightId(item.id)}
-              size="large"
-            >
-              {item.icon}
-            </IconButton>
-          ))}
-        </Stack>
+        <MainSidebar
+          activeLeftId={activeLeftId}
+          setActiveLeftId={setActiveLeftId}
+          activeRightId={activeRightId}
+          setActiveRightId={setActiveRightId}
+        />
 
-        <Box
-          sx={{
-            width: 320,
-            bgcolor: "background.paper",
-            borderRight: 1,
-            borderColor: "divider",
-            backgroundImage: "linear-gradient(180deg, rgba(124,58,237,0.15), rgba(15,23,42,0.95))",
-          }}
-        >
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-            <Typography variant="h6" sx={{ color: "secondary.main" }}>
-              Conversations
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {conversations.length} chats
-            </Typography>
-          </Box>
+        <ConversationList
+          conversations={conversations}
+          isLoading={convLoading}
+          selectedConversation={conversation}
+          onSelectConversation={handleSelectConversation}
+          legacyUserId={legacyUserId}
+        />
 
-          <List
-            sx={{
-              maxHeight: "calc(100dvh - 120px)",
-              overflow: "auto",
-              backgroundColor: "background.paper",
-              borderRadius: 2,
-              boxShadow: "0 10px 30px rgba(7,3,18,0.6)",
-            }}
-          >
-            {convLoading ? (
-              <Typography sx={{ p: 2 }} color="text.secondary">
-                Loading conversations...
-              </Typography>
-            ) : conversations.length === 0 ? (
-              <Typography sx={{ p: 2 }} color="text.secondary">
-                Connect to Tenchat to see your conversations.
-              </Typography>
-            ) : (
-              conversations.map((conv) => (
-                <ListItemButton
-                  key={conv.$id}
-                  selected={conversation?.$id === conv.$id}
-                  onClick={() => handleSelectConversation(conv)}
-                >
-                  <ListItemText
-                    primary={formatConversationLabel(conv)}
-                    secondary={conv.lastMessageText || "No messages yet"}
-                  />
-                </ListItemButton>
-              ))
-            )}
-          </List>
-        </Box>
+        <ChatWindow
+          conversation={conversation}
+          currentUserId={legacyUserId}
+          isAuthenticated={isAuthenticated}
+          onConnect={() => setAuthDialogOpen(true)}
+        />
 
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            bgcolor: "background.default",
-            backgroundImage:
-              "radial-gradient(circle at top right, rgba(250,204,21,0.15), transparent 55%), linear-gradient(160deg, rgba(124,58,237,0.7), transparent 65%)",
-          }}
-        >
-          <Box sx={{ p: 3, borderBottom: 1, borderColor: "divider" }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Stack>
-                <Typography variant="h5" sx={{ color: "secondary.main" }}>
-                  {conversation ? formatConversationLabel(conversation) : "Welcome to Tenchat"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {isAuthenticated ? "Encrypted chat" : "Connect to your wallet to unlock messaging"}
-                </Typography>
-              </Stack>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => setAuthDialogOpen(true)}
-                disabled={isAuthenticated}
-              >
-                {isAuthenticated ? "Connected" : "Connect"}
-              </Button>
-            </Stack>
-          </Box>
-
-          <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
-              {messagesLoading ? (
-                <Typography color="text.secondary">Loading messages...</Typography>
-              ) : messages.length === 0 ? (
-                <Typography color="text.secondary">
-                  {conversation ? "No messages yet. Say hello!" : "Select a conversation to begin."}
-                </Typography>
-              ) : (
-                <Stack spacing={2}>
-              {messages.map((message) => {
-                const isSelf = message.senderId === legacyUser?.id;
-                return (
-                  <Paper
-                    key={message.$id}
-                    sx={{
-                      p: 2,
-                      bgcolor: isSelf ? "primary.main" : "secondary.main",
-                      color: isSelf ? "primary.contrastText" : "secondary.contrastText",
-                      alignSelf: isSelf ? "flex-end" : "flex-start",
-                      maxWidth: "70%",
-                      boxShadow: "0 5px 20px rgba(7,3,18,0.4)",
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {isSelf ? "You" : message.senderId}
-                    </Typography>
-                    <Typography>{message.content}</Typography>
-                  </Paper>
-                );
-              })}
-            </Stack>
-              )}
-            </Box>
-
-            <Divider />
-
-            <Box sx={{ p: 2 }}>
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  fullWidth
-                  placeholder="Write a secure message..."
-                  value={composer}
-                  onChange={(event) => setComposer(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  sx={{
-                    backgroundColor: "rgba(255, 255, 255, 0.03)",
-                    borderRadius: 2,
-                    border: "1px solid rgba(250, 204, 21, 0.3)",
-                  }}
-                />
-              <Button variant="contained" color="secondary" onClick={handleSendMessage}>
-                Send
-              </Button>
-              </Stack>
-            </Box>
-          </Box>
-        </Box>
-
-          <Box
-            sx={{
-              width: 280,
-              bgcolor: "background.paper",
-              borderLeft: 1,
-              borderColor: "divider",
-              p: 3,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              backgroundImage:
-                "linear-gradient(120deg, rgba(250,204,21,0.2), rgba(124,58,237,0.1))",
-            }}
-          >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Avatar src="">
-              {currentAccount?.name?.[0] || "U"}
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1">
-                {currentAccount?.name || "Guest"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {currentAccount?.email || "Not signed in"}
-              </Typography>
-            </Box>
-            <IconButton onClick={logout}>
-              <SettingsOutlined />
-            </IconButton>
-          </Stack>
-
-          <Button variant="outlined" onClick={logout}>
-            Logout
-          </Button>
-
-          <Divider />
-
-          <Stack spacing={1}>
-            <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>
-              Right panel quick actions
-            </Typography>
-            <Button fullWidth variant="contained" color="secondary">
-              Create channel
-            </Button>
-            <Button fullWidth variant="outlined" sx={{ borderColor: "secondary.main", color: "secondary.main" }}>
-              Wallet / NFTs
-            </Button>
-          </Stack>
-        </Box>
+        <ProfilePanel
+          currentAccount={currentAccount}
+          logout={logout}
+        />
       </Box>
 
       <AuthDialog open={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
     </>
   );
 }
-
