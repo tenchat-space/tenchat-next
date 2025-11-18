@@ -3,7 +3,7 @@
  * React hooks for messaging functionality
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { messagingService, realtimeService } from '@/lib/appwrite';
 
 export interface Conversation {
@@ -27,18 +27,58 @@ export interface TypingIndicator {
   conversationId: string;
 }
 
-export function useConversations(userId: string) {
+export function useConversations(userId: string, options?: { userName?: string }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const displayName = useMemo(() => options?.userName || 'You', [options]);
+  const selfConversation = useMemo(() => {
+    if (!userId) return null;
+    return {
+      $id: `self-${userId}`,
+      name: `${displayName} (You)`,
+      participantIds: [userId],
+      lastMessageText: 'Private notes with yourself',
+    } satisfies Conversation;
+  }, [displayName, userId]);
+  const ensureSelfConversation = useCallback(
+    (list: Conversation[]) => {
+      if (!selfConversation) return list;
+      const filtered = list.filter((conv) => conv.$id !== selfConversation.$id);
+      return [selfConversation, ...filtered];
+    },
+    [selfConversation]
+  );
+
   const loadConversations = useCallback(async () => {
     if (!userId) return;
     
+    const displayName = useMemo(() => options?.userName || 'You', [options]);
+
+    const selfConversation = useMemo(() => {
+      if (!userId) return null;
+      return {
+        $id: `self-${userId}`,
+        name: `${displayName} (You)`,
+        participantIds: [userId],
+        lastMessageText: 'Private notes with yourself',
+      } satisfies Conversation;
+    }, [displayName, userId]);
+
+    const ensureSelfConversation = useCallback(
+      (list: Conversation[]) => {
+        if (!selfConversation) return list;
+        const filtered = list.filter((conv) => conv.$id !== selfConversation.$id);
+        return [selfConversation, ...filtered];
+      },
+      [selfConversation]
+    );
+
     try {
       setIsLoading(true);
       const convs = await messagingService.getUserConversations(userId);
-      setConversations(convs);
+      setConversations(ensureSelfConversation(convs));
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -46,7 +86,7 @@ export function useConversations(userId: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, ensureSelfConversation]);
 
   useEffect(() => {
     loadConversations();
@@ -56,31 +96,31 @@ export function useConversations(userId: string) {
         const conversation = event.payload;
       
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
-        setConversations(prev => [conversation, ...prev]);
+        setConversations(prev => ensureSelfConversation([conversation, ...prev.filter((c) => c.$id !== conversation.$id)]));
       } else if (event.events.includes('databases.*.collections.*.documents.*.update')) {
         setConversations(prev =>
-          prev.map(c => c.$id === conversation.$id ? conversation : c)
+          ensureSelfConversation(prev.map(c => c.$id === conversation.$id ? conversation : c))
         );
       } else if (event.events.includes('databases.*.collections.*.documents.*.delete')) {
-        setConversations(prev => prev.filter(c => c.$id !== conversation.$id));
+        setConversations(prev => ensureSelfConversation(prev.filter(c => c.$id !== conversation.$id)));
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [loadConversations]);
+  }, [loadConversations, ensureSelfConversation]);
 
   const createConversation = useCallback(async (data: Partial<Conversation>) => {
     try {
       const newConv = await messagingService.createConversation(data);
-      setConversations(prev => [newConv, ...prev]);
+      setConversations(prev => ensureSelfConversation([newConv, ...prev]));
       return newConv;
     } catch (err) {
       setError(err as Error);
       throw err;
     }
-  }, []);
+  }, [ensureSelfConversation]);
 
   const pinConversation = useCallback(async (conversationId: string, userId: string) => {
     try {
