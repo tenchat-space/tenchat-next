@@ -5,26 +5,40 @@ export const tenchatThemeOptions: ThemeOptions = {
     mode: 'dark',
     background: {
       default: '#0c040b',
-      paper: '#130b1f',
+      paper: 'rgba(19, 11, 31, 0.6)', // More transparent for glass effect
     },
     primary: {
-      main: '#7c3aed',
+      main: '#8b5cf6', // Violet 500
+      light: '#a78bfa',
+      dark: '#7c3aed',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#facc15',
+      main: '#facc15', // Yellow 400
+      light: '#fde047',
+      dark: '#eab308',
       contrastText: '#05010c',
     },
     text: {
-      primary: '#fcf0d6',
-      secondary: '#fde68a',
+      primary: '#fefce8', // Yellow 50
+      secondary: '#fef08a', // Yellow 200
     },
-    divider: '#facc15',
+    divider: 'rgba(250, 204, 21, 0.15)',
   },
   typography: {
     fontFamily: 'var(--font-geist-sans, "Inter", system-ui, sans-serif)',
+    h5: {
+      fontWeight: 700,
+      letterSpacing: '-0.02em',
+    },
+    h6: {
+      fontWeight: 600,
+      letterSpacing: '-0.01em',
+    },
     button: {
       textTransform: 'none',
+      fontWeight: 600,
+      letterSpacing: '0.02em',
     },
   },
   shape: {
@@ -34,51 +48,61 @@ export const tenchatThemeOptions: ThemeOptions = {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
-          fontWeight: 600,
-          boxShadow: '0 10px 30px rgba(7,10,30,0.65)',
-          position: 'relative',
-          overflow: 'hidden',
+          borderRadius: 12,
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          },
         },
         containedPrimary: {
-          backgroundImage: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
         },
         containedSecondary: {
-          backgroundImage: 'linear-gradient(135deg, #facc15, #eab308)',
+          background: 'linear-gradient(135deg, #facc15, #eab308)',
           color: '#05010c',
-          boxShadow: '0 25px 40px rgba(250,204,21,0.4)',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage:
-            'linear-gradient(160deg, rgba(124, 58, 237, 0.5), rgba(15, 23, 42, 0.95))',
-          border: '1px solid rgba(250, 204, 21, 0.35)',
-          boxShadow: '0 35px 65px rgba(4, 0, 12, 0.75)',
-          backdropFilter: 'blur(18px)',
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 18px 40px rgba(7,3,18,0.5)',
-          borderRadius: 16,
+          backgroundImage: 'none',
+          backgroundColor: 'rgba(19, 11, 31, 0.7)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
         },
       },
     },
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 18,
-          margin: '0.35rem 0',
-          backgroundColor: 'rgba(15,23,42,0.45)',
-          boxShadow: '0 20px 40px rgba(4,0,12,0.6), inset 0 -1px 0 rgba(250,204,21,0.2)',
+          borderRadius: 12,
+          margin: '4px 8px',
+          padding: '10px 16px',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            backgroundColor: 'rgba(139, 92, 246, 0.08)',
+            transform: 'translateX(4px)',
+          },
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(139, 92, 246, 0.15)',
+            borderLeft: '3px solid #facc15',
+            '&:hover': {
+              backgroundColor: 'rgba(139, 92, 246, 0.2)',
+            },
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
         },
       },
     },
   },
 };
-

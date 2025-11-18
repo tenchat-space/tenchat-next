@@ -6,8 +6,17 @@ import {
   IconButton,
   Stack,
   Typography,
+  Card,
+  CardContent,
+  LinearProgress,
+  Chip,
 } from "@mui/material";
-import { SettingsOutlined } from "@mui/icons-material";
+import {
+  SettingsOutlined,
+  AccountBalanceWalletOutlined,
+  SecurityOutlined,
+  VerifiedUserOutlined,
+} from "@mui/icons-material";
 import { Models } from "appwrite";
 
 interface ProfilePanelProps {
@@ -26,48 +35,106 @@ export function ProfilePanel({ currentAccount, logout }: ProfilePanelProps) {
         p: 3,
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        gap: 3,
         backgroundImage:
-          "linear-gradient(120deg, rgba(250,204,21,0.2), rgba(124,58,237,0.1))",
+          "linear-gradient(120deg, rgba(250,204,21,0.1), rgba(124,58,237,0.05))",
+        overflowY: "auto",
       }}
     >
+      {/* User Profile Header */}
       <Stack direction="row" alignItems="center" spacing={1}>
-        <Avatar src="">{currentAccount?.name?.[0] || "U"}</Avatar>
-        <Box>
-          <Typography variant="subtitle1">
-            {currentAccount?.name || "Guest"}
+        <Avatar
+          src=""
+          sx={{ width: 48, height: 48, border: "2px solid", borderColor: "secondary.main" }}
+        >
+          {currentAccount?.name?.[0] || "U"}
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle1" fontWeight={600} noWrap>
+            {currentAccount?.name || "Guest User"}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {currentAccount?.email || "Not signed in"}
+          <Typography variant="caption" color="text.secondary" noWrap display="block">
+            {currentAccount?.email || "Sign in to sync"}
           </Typography>
         </Box>
-        <IconButton onClick={logout}>
-          <SettingsOutlined />
+        <IconButton onClick={logout} size="small">
+          <SettingsOutlined fontSize="small" />
         </IconButton>
       </Stack>
 
-      <Button variant="outlined" onClick={logout}>
-        Logout
+      <Button variant="outlined" size="small" onClick={logout} color="error" sx={{ borderRadius: 2 }}>
+        Sign Out
       </Button>
 
       <Divider />
 
+      {/* Wallet Summary */}
+      <Box>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography variant="subtitle2" color="secondary.main">
+            Wallet
+          </Typography>
+          <IconButton size="small">
+            <AccountBalanceWalletOutlined fontSize="small" />
+          </IconButton>
+        </Stack>
+        <Card variant="outlined" sx={{ bgcolor: "background.default", borderRadius: 3 }}>
+          <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+            <Typography variant="caption" color="text.secondary">
+              Total Balance
+            </Typography>
+            <Typography variant="h5" fontWeight={700}>
+              $0.00
+            </Typography>
+            <Stack direction="row" spacing={1} mt={1}>
+              <Chip label="ETH" size="small" variant="outlined" />
+              <Chip label="TEN" size="small" color="secondary" />
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* TEE / Security Status */}
+      <Box>
+        <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+          <Typography variant="subtitle2" color="secondary.main">
+            Security Status
+          </Typography>
+          <VerifiedUserOutlined fontSize="small" color="success" />
+        </Stack>
+        <Card variant="outlined" sx={{ bgcolor: "rgba(34, 197, 94, 0.05)", borderColor: "rgba(34, 197, 94, 0.2)" }}>
+          <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+             <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
+                <SecurityOutlined fontSize="small" color="success" />
+                <Typography variant="body2" fontWeight={600} color="success.main">
+                   Encrypted (TEE)
+                </Typography>
+             </Stack>
+             <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                Key rotation in 2 days
+             </Typography>
+             <LinearProgress variant="determinate" value={75} color="success" sx={{ height: 4, borderRadius: 2 }} />
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Divider />
+
+      {/* Quick Actions */}
       <Stack spacing={1}>
-        <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>
-          Right panel quick actions
+        <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+          Quick Actions
         </Typography>
-        <Button fullWidth variant="contained" color="secondary">
-          Create channel
+        <Button fullWidth variant="contained" color="secondary" sx={{ justifyContent: "flex-start" }}>
+          New Channel
         </Button>
-        <Button
-          fullWidth
-          variant="outlined"
-          sx={{ borderColor: "secondary.main", color: "secondary.main" }}
-        >
-          Wallet / NFTs
+        <Button fullWidth variant="outlined" color="secondary" sx={{ justifyContent: "flex-start" }}>
+          Mint Sticker Pack
+        </Button>
+        <Button fullWidth variant="text" color="inherit" sx={{ justifyContent: "flex-start", color: "text.secondary" }}>
+          Saved Messages
         </Button>
       </Stack>
     </Box>
   );
 }
-

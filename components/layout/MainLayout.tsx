@@ -10,11 +10,15 @@ import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
 import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
 
+// Views
+import { StoriesList } from "@/components/chat/sidebar/views/StoriesList";
+import { ChannelList } from "@/components/chat/sidebar/views/ChannelList";
+import { ContactList } from "@/components/chat/sidebar/views/ContactList";
+import { CallHistory } from "@/components/chat/sidebar/views/CallHistory";
+
 export function MainLayout() {
   const { currentAccount, currentUser, isAuthenticated, isLoading, logout } = useAppwrite();
 
-  // Prepare legacy user object for compatibility if needed,
-  // though we try to use IDs directly where possible.
   const legacyUserId = useMemo(() => {
     return currentAccount?.$id || currentUser?.id || "";
   }, [currentAccount, currentUser]);
@@ -35,9 +39,6 @@ export function MainLayout() {
 
   // Handle Auth Dialog
   useEffect(() => {
-    // Only show dialog if loading is done and user is not authenticated.
-    // We use a timeout to avoid immediate flash or conflict with hydration if needed,
-    // but here we just trust the isLoading flag.
     if (!isLoading && !isAuthenticated) {
         setAuthDialogOpen(true);
     } else if (isAuthenticated) {
@@ -49,6 +50,39 @@ export function MainLayout() {
     setSelectedConversation(conv);
   };
 
+  const renderListPanel = () => {
+    switch (activeLeftId) {
+      case 'chats':
+        return (
+          <ConversationList
+            conversations={conversations}
+            isLoading={convLoading}
+            selectedConversation={conversation}
+            onSelectConversation={handleSelectConversation}
+            legacyUserId={legacyUserId}
+          />
+        );
+      case 'stories':
+        return <StoriesList />;
+      case 'channels':
+        return <ChannelList />;
+      case 'contacts':
+        return <ContactList />;
+      case 'calls':
+        return <CallHistory />;
+      default:
+        return (
+          <ConversationList
+            conversations={conversations}
+            isLoading={convLoading}
+            selectedConversation={conversation}
+            onSelectConversation={handleSelectConversation}
+            legacyUserId={legacyUserId}
+          />
+        );
+    }
+  };
+
   return (
     <>
       <Box
@@ -58,6 +92,7 @@ export function MainLayout() {
           height: "100dvh",
           width: "100%",
           bgcolor: "background.default",
+          overflow: "hidden",
         }}
       >
         <MainSidebar
@@ -67,13 +102,8 @@ export function MainLayout() {
           setActiveRightId={setActiveRightId}
         />
 
-        <ConversationList
-          conversations={conversations}
-          isLoading={convLoading}
-          selectedConversation={conversation}
-          onSelectConversation={handleSelectConversation}
-          legacyUserId={legacyUserId}
-        />
+        {/* List Panel Area */}
+        {renderListPanel()}
 
         <ChatWindow
           conversation={conversation}
