@@ -28,17 +28,23 @@ function PopoutContent() {
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     channelRef.current = new BroadcastChannel('tenchat-popout');
-    return () => {
-      channelRef.current?.close();
-      channelRef.current = null;
-    };
-  }, []);
 
-  useEffect(() => {
-    return () => {
+    const handleBeforeUnload = () => {
       if (channelRef.current && popoutState?.id) {
         channelRef.current.postMessage({ type: 'popout-closed', windowId: popoutState.id });
       }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Send message on unmount as well, just in case
+      if (channelRef.current && popoutState?.id) {
+        channelRef.current.postMessage({ type: 'popout-closed', windowId: popoutState.id });
+      }
+      channelRef.current?.close();
+      channelRef.current = null;
     };
   }, [popoutState?.id]);
 
