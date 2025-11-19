@@ -132,15 +132,43 @@ export function PerformanceProvider({ children }: { children: ReactNode }) {
   const config = getConfig();
 
   const clearClutter = useCallback(() => {
-    // Close minimized windows first
-    const minimized = windows.filter(w => w.isMinimized);
-    minimized.forEach(w => closeWindow(w.id));
+    const limit = config.maxWindows;
+    const currentCount = windows.length;
     
-    // If still too many, close oldest non-maximized
-    if (windows.length - minimized.length > 3) {
-        // Logic to close oldest could go here if we tracked creation time
+    // If we are within limits, just close minimized ones as a cleanup action
+    if (currentCount <= limit) {
+        const minimized = windows.filter(w => w.isMinimized);
+        minimized.forEach(w => closeWindow(w.id));
+        return;
     }
-  }, [windows, closeWindow]);
+
+    let windowsToRemove = currentCount - limit;
+    const idsToRemove: Set<string> = new Set();
+
+    // 1. Target minimized windows first
+    const minimized = windows.filter(w => w.isMinimized);
+    for (const w of minimized) {
+        if (windowsToRemove <= 0) break;
+        idsToRemove.add(w.id);
+        windowsToRemove--;
+    }
+
+    // 2. If still need to remove, target oldest windows (assuming index 0 is oldest/bottom)
+    // We avoid closing the active window (usually last) if possible, unless we have to.
+    if (windowsToRemove > 0) {
+        // Filter out already marked ones
+        const candidates = windows.filter(w => !idsToRemove.has(w.id));
+        
+        // Remove from start (oldest)
+        for (const w of candidates) {
+            if (windowsToRemove <= 0) break;
+            idsToRemove.add(w.id);
+            windowsToRemove--;
+        }
+    }
+
+    idsToRemove.forEach(id => closeWindow(id));
+  }, [windows, closeWindow, config.maxWindows]);
 
   return (
     <PerformanceContext.Provider value={{ mode, setMode, metrics, config, recommendations, clearClutter }}>
