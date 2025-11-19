@@ -355,6 +355,15 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                 <ToggleButton value="dynamic">Dynamic</ToggleButton>
               </ToggleButtonGroup>
 
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={handleOpenPerformanceWidget}
+              >
+                Open Performance Monitor
+              </Button>
+
              <Divider sx={{ my: 2 }} />
              
              <Typography variant="h6" gutterBottom>Interface Style</Typography>
