@@ -56,6 +56,14 @@ export function KernelProvider({ children }: { children: ReactNode }) {
   const [extensions, setExtensions] = useState<ExtensionManifest[]>(PRE_INSTALLED_EXTENSIONS);
   const [registeredWidgets, setRegisteredWidgets] = useState<Record<string, ReactNode[]>>({});
 
+  // Initialize Network
+  useEffect(() => {
+    const manager = BackendManager.getInstance();
+    manager.registerAdapter(new AppwriteAdapter());
+    manager.registerAdapter(new P2PAdapter());
+    manager.initialize();
+  }, []);
+
   // 1. Implement the Window API
   const windowApi: WindowAPI = {
     open: async (config: WindowConfig) => {
@@ -98,14 +106,23 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 2. Implement Messaging API (Placeholder)
+  // 2. Implement Messaging API
   const messagingApi: MessagingAPI = {
     send: async (content: string, recipient: string) => {
-      console.log(`[Kernel] Sending message to ${recipient}: ${content}`);
+      const manager = BackendManager.getInstance();
+      await manager.sendMessage({
+        id: `msg-${Date.now()}`,
+        type: 'chat',
+        senderId: 'current-user', // Should come from auth
+        recipientId: recipient,
+        content: content, // Should be encrypted
+        timestamp: Date.now(),
+        signature: 'mock-sig'
+      });
     },
     onReceive: (callback: (msg: unknown) => void) => {
-      // In real implementation, subscribe to websocket/event bus
-      return () => {};
+      const manager = BackendManager.getInstance();
+      return manager.onMessage(callback);
     }
   };
 
@@ -207,6 +224,15 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 9. Implement Network API
+  const networkApi: NetworkAPI = {
+    getStatus: () => BackendManager.getInstance().getStatus(),
+    getBackendType: () => BackendManager.getInstance().getActiveBackend()?.type || 'appwrite',
+    switchBackend: async (type) => {
+      await BackendManager.getInstance().switchBackend(type);
+    }
+  };
+
   // The full API (for Core use)
   const coreApi: TenchatAPI = {
     window: windowApi,
@@ -216,7 +242,8 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     user: userApi,
     ai: aiApi,
     system: systemApi,
-    blockchain: blockchainApi
+    blockchain: blockchainApi,
+    network: networkApi
   };
 
   // Helper to get API for a specific extension
@@ -250,7 +277,7 @@ export function KernelProvider({ children }: { children: ReactNode }) {
   };
 
   const installExtension = async (manifest: ExtensionManifest, script: string) => {
-    console.log(`Installing extension: ${manifest.name}`);
+    console.log(`Installing extension: ${manifest.name} with script length ${script.length}`);
     setExtensions(prev => [...prev, manifest]);
     
     try {
