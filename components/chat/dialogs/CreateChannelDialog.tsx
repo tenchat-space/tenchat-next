@@ -14,7 +14,8 @@ import {
   CircularProgress
 } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
-import { messagingService } from "@/lib/appwrite";
+import { chatService } from "@/lib/appwrite";
+import { ConversationsType } from "@/types/appwrite";
 
 interface CreateChannelDialogProps {
   open: boolean;
@@ -33,15 +34,15 @@ export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps)
 
     try {
       setIsLoading(true);
-      await messagingService.createConversation({
-        type: 'channel',
+      await chatService.createConversation(
+        [currentAccount.$id],
+        ConversationsType.CHANNEL,
         name,
-        description,
-        creatorId: currentAccount.$id,
-        participantIds: [currentAccount.$id],
-        adminIds: [currentAccount.$id],
-        // In a real app, we'd handle privacy settings here
-      });
+        {
+          description,
+          isPublic: !isPrivate
+        }
+      );
       onClose();
       setName("");
       setDescription("");

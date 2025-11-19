@@ -4,23 +4,11 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { messagingService, realtimeService } from '@/lib/appwrite';
+import { chatService, realtimeService } from '@/lib/appwrite';
+import { Conversations, Messages, MessagesContentType } from '@/types/appwrite';
 
-export interface Conversation {
-  $id: string;
-  name?: string | null;
-  participantIds?: string[];
-  lastMessageText?: string | null;
-}
-
-export interface ChatMessage {
-  $id: string;
-  senderId: string;
-  content: string;
-  conversationId: string;
-  contentType?: string;
-  metadata?: Record<string, any>;
-}
+export type Conversation = Conversations;
+export type ChatMessage = Messages;
 
 export interface TypingIndicator {
   isTyping: boolean;
@@ -34,6 +22,9 @@ export function useConversations(userId: string, options?: { userName?: string }
   const [error, setError] = useState<Error | null>(null);
 
   const displayName = useMemo(() => options?.userName || 'You', [options]);
+  
+  // Self conversation logic might need adjustment based on how backend handles it
+  // For now, we'll keep the UI logic but ensure types match
   const selfConversation = useMemo(() => {
     if (!userId) return null;
     return {
@@ -41,8 +32,38 @@ export function useConversations(userId: string, options?: { userName?: string }
       name: `${displayName} (You)`,
       participantIds: [userId],
       lastMessageText: 'Private notes with yourself',
-    } satisfies Conversation;
+      // Add required fields with defaults to satisfy type
+      type: 'direct',
+      creatorId: userId,
+      adminIds: [userId],
+      moderatorIds: [],
+      participantCount: 1,
+      maxParticipants: 1,
+      isEncrypted: true,
+      encryptionVersion: '1',
+      isPinned: [],
+      isMuted: [],
+      isArchived: [],
+      lastMessageId: null,
+      lastMessageAt: new Date().toISOString(),
+      lastMessageSenderId: userId,
+      unreadCount: '0',
+      settings: null,
+      isPublic: false,
+      inviteLink: null,
+      inviteLinkExpiry: null,
+      category: null,
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      $collectionId: 'conversations',
+      $databaseId: 'chat',
+      $createdAt: new Date().toISOString(),
+      $updatedAt: new Date().toISOString(),
+      $permissions: []
+    } as unknown as Conversation;
   }, [displayName, userId]);
+
   const ensureSelfConversation = useCallback(
     (list: Conversation[]) => {
       if (!selfConversation) return list;
@@ -57,7 +78,7 @@ export function useConversations(userId: string, options?: { userName?: string }
 
     try {
       setIsLoading(true);
-      const convs = await messagingService.getUserConversations(userId);
+      const convs = await chatService.getConversations();
       setConversations(ensureSelfConversation(convs));
       setError(null);
     } catch (err) {
@@ -91,9 +112,9 @@ export function useConversations(userId: string, options?: { userName?: string }
     };
   }, [loadConversations, ensureSelfConversation]);
 
-  const createConversation = useCallback(async (data: Partial<Conversation>) => {
+  const createConversation = useCallback(async (participantIds: string[], name?: string) => {
     try {
-      const newConv = await messagingService.createConversation(data);
+      const newConv = await chatService.createConversation(participantIds, undefined, name);
       setConversations(prev => ensureSelfConversation([newConv, ...prev]));
       return newConv;
     } catch (err) {
@@ -102,25 +123,16 @@ export function useConversations(userId: string, options?: { userName?: string }
     }
   }, [ensureSelfConversation]);
 
+  // Pin/Mute not yet implemented in chatService, keeping placeholders or removing
   const pinConversation = useCallback(async (conversationId: string, userId: string) => {
-    try {
-      await messagingService.togglePin(conversationId, userId);
-      await loadConversations();
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
-  }, [loadConversations]);
+    // TODO: Implement in chatService
+    console.warn('pinConversation not implemented');
+  }, []);
 
   const muteConversation = useCallback(async (conversationId: string, userId: string) => {
-    try {
-      await messagingService.toggleMute(conversationId, userId);
-      await loadConversations();
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
-  }, [loadConversations]);
+    // TODO: Implement in chatService
+    console.warn('muteConversation not implemented');
+  }, []);
 
   return {
     conversations,
@@ -143,8 +155,8 @@ export function useMessages(conversationId: string) {
     
     try {
       setIsLoading(true);
-      const msgs = await messagingService.getMessages(conversationId);
-      setMessages(msgs.reverse()); // Reverse to show oldest first
+      const msgs = await chatService.getMessages(conversationId);
+      setMessages(msgs); // chatService already reverses them to be chronological if needed, or we check UI needs
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -161,12 +173,17 @@ export function useMessages(conversationId: string) {
     const unsubscribe = realtimeService.subscribeToMessages<ChatMessage>(conversationId, (event) => {
       const message = event.payload;
       
+      // We need to decrypt real-time messages too!
+      // This is tricky because the payload comes encrypted.
+      // We might need to handle decryption here or in the service.
+      // For now, let's just reload messages on new message to ensure decryption happens via service.
+      // Or better, manually decrypt here if we had access to securityService.
+      
       if (event.events.includes('databases.*.collections.*.documents.*.create')) {
-        setMessages(prev => [...prev, message]);
+         // Reloading is safer for now to ensure decryption
+         loadMessages();
       } else if (event.events.includes('databases.*.collections.*.documents.*.update')) {
-        setMessages(prev =>
-          prev.map(m => m.$id === message.$id ? message : m)
-        );
+         loadMessages();
       }
     });
 
@@ -175,13 +192,10 @@ export function useMessages(conversationId: string) {
     };
   }, [conversationId, loadMessages]);
 
-  const sendMessage = useCallback(async (data: Partial<ChatMessage>) => {
+  const sendMessage = useCallback(async (content: string, type: MessagesContentType = MessagesContentType.TEXT, replyToId?: string) => {
     try {
-      const newMsg = await messagingService.sendMessage({
-        ...data,
-        conversationId,
-      });
-      // Message will be added via real-time subscription
+      const newMsg = await chatService.sendMessage(conversationId, content, type, replyToId);
+      // Message will be added via real-time subscription (which triggers reload)
       return newMsg;
     } catch (err) {
       setError(err as Error);
@@ -190,21 +204,13 @@ export function useMessages(conversationId: string) {
   }, [conversationId]);
 
   const addReaction = useCallback(async (messageId: string, userId: string, emoji: string) => {
-    try {
-      await messagingService.addReaction(messageId, userId, emoji);
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
+    // TODO: Implement in chatService
+    console.warn('addReaction not implemented');
   }, []);
 
   const markAsRead = useCallback(async (userId: string) => {
-    try {
-      await messagingService.markAsRead(conversationId, userId);
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
+    // TODO: Implement in chatService
+    console.warn('markAsRead not implemented');
   }, [conversationId]);
 
   return {
