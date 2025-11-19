@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { useConversations, type Conversation } from "@/hooks/useMessaging";
 import { useWindowBridge } from "@/hooks/useWindowBridge";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { AuthOverlay } from "@/components/auth/AuthOverlay";
 import { MainSidebar } from "@/components/navigation/MainSidebar";
+import { BottomNav } from "@/components/navigation/BottomNav";
 import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
 import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
@@ -49,6 +50,8 @@ export function MainLayout() {
     userName: displayName,
   });
   const { openChatWindow, openCallWindow } = useWindowBridge();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Determine active conversation
   const conversation = useMemo(
@@ -151,41 +154,77 @@ export function MainLayout() {
           filter: !isAuthenticated && !isLoading ? 'blur(8px)' : 'none',
           pointerEvents: !isAuthenticated && !isLoading ? 'none' : 'auto',
           transition: 'filter 0.3s ease',
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
-        <MainSidebar
-          activeLeftId={activeLeftId}
-          setActiveLeftId={setActiveLeftId}
-          activeRightId={activeRightId}
-          setActiveRightId={(id) => {
-            if (id === 'settings') {
-                setSettingsOpen(true);
-            } else {
-                setActiveRightId(id);
-            }
-          }}
-        />
+        {!isMobile && (
+          <MainSidebar
+            activeLeftId={activeLeftId}
+            setActiveLeftId={setActiveLeftId}
+            activeRightId={activeRightId}
+            setActiveRightId={(id) => {
+              if (id === 'settings') {
+                  setSettingsOpen(true);
+              } else {
+                  setActiveRightId(id);
+              }
+            }}
+          />
+        )}
 
-        {/* List Panel Area */}
-        {renderListPanel()}
+        {/* List Panel Area - Hidden on mobile if chat is open, or handled differently */}
+        <Box sx={{ 
+          display: isMobile && conversation ? 'none' : 'block',
+          width: isMobile ? '100%' : 'auto',
+          height: isMobile ? 'calc(100% - 80px)' : '100%', // Space for bottom nav
+        }}>
+          {renderListPanel()}
+        </Box>
 
-        <ChatWindow
-          conversation={conversation}
-          currentUserId={legacyUserId}
-          isAuthenticated={isAuthenticated}
-          onConnect={() => setAuthDialogOpen(true)}
-        />
+        {/* Chat Window - Full screen on mobile */}
+        <Box sx={{ 
+          flex: 1, 
+          display: isMobile && !conversation ? 'none' : 'flex',
+          height: isMobile ? 'calc(100% - 80px)' : '100%',
+          position: 'relative'
+        }}>
+          <ChatWindow
+            conversation={conversation}
+            currentUserId={legacyUserId}
+            isAuthenticated={isAuthenticated}
+            onConnect={() => setAuthDialogOpen(true)}
+          />
+        </Box>
 
-        {/* Right Panel Area */}
-        {activeRightId === 'profile' && (
+        {/* Right Panel Area - Hidden on mobile usually, or drawer */}
+        {!isMobile && activeRightId === 'profile' && (
             <ProfilePanel
               currentAccount={currentAccount}
               logout={logout}
               onOpenSettings={() => setSettingsOpen(true)}
             />
         )}
-        {activeRightId === 'wallet' && (
+        {!isMobile && activeRightId === 'wallet' && (
             <WalletPanel />
+        )}
+
+        {isMobile && (
+          <BottomNav
+            activeLeftId={activeLeftId}
+            setActiveLeftId={(id) => {
+              setActiveLeftId(id);
+              // If switching tabs, clear conversation to show list
+              if (id !== 'chats') setSelectedConversation(null);
+            }}
+            activeRightId={activeRightId}
+            setActiveRightId={(id) => {
+              if (id === 'settings') {
+                  setSettingsOpen(true);
+              } else {
+                  setActiveRightId(id);
+              }
+            }}
+          />
         )}
       </Box>
 
