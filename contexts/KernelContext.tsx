@@ -48,12 +48,13 @@ export function KernelProvider({ children }: { children: ReactNode }) {
       windowContext.maximizeWindow(id);
     },
     blur: async (id: string, amount: number) => {
-      // TODO: Implement visual blurring via a new Window property
-      console.log(`Blurring window ${id} by ${amount}`);
+      windowContext.setWindowBlur(id, amount > 0, amount);
     },
     lock: async (id: string) => {
-      // TODO: Implement biometric lock via a new Window property
-      console.log(`Locking window ${id}`);
+      // Toggle lock state. In a real app, this would trigger a biometric challenge first.
+      // For now, we just lock it. To unlock, we'd need an 'unlock' method or toggle.
+      // Let's assume this method sets it to locked.
+      windowContext.setWindowLock(id, true);
     }
   };
 

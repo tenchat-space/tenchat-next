@@ -55,6 +55,9 @@ export function WindowProvider({ children }: { children: ReactNode }) {
       isPoppedOut: false,
       zIndex: nextZIndex,
       lastInteraction: Date.now(),
+      isBlurred: false,
+      blurAmount: 0,
+      isLocked: false,
     };
 
     setWindows(prev => [...prev, newWindow]);
@@ -118,6 +121,14 @@ export function WindowProvider({ children }: { children: ReactNode }) {
       setWindows(prev => prev.map(w => w.id === id ? { ...w, isPoppedOut: true } : w));
   }, []);
 
+  const setWindowBlur = useCallback((id: string, blurred: boolean, amount: number = 10) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, isBlurred: blurred, blurAmount: amount } : w));
+  }, []);
+
+  const setWindowLock = useCallback((id: string, locked: boolean) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, isLocked: locked } : w));
+  }, []);
+
   return (
     <WindowContext.Provider value={{
       windows,
@@ -132,7 +143,9 @@ export function WindowProvider({ children }: { children: ReactNode }) {
       resizeWindow,
       dockWindow,
       mergeWindows,
-      popOutWindow
+      popOutWindow,
+      setWindowBlur,
+      setWindowLock
     }}>
       {children}
     </WindowContext.Provider>

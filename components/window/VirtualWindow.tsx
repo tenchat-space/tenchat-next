@@ -2,13 +2,14 @@
 
 import React, { useRef } from 'react';
 import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
-import { Close, CropSquare, Minimize, OpenInNew } from '@mui/icons-material';
+import { Close, CropSquare, Minimize, OpenInNew, Lock } from '@mui/icons-material';
 import { WindowInstance, WindowContentType } from '@/types/window';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDraggable, useResizable } from '@/hooks/useWindowInteraction';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
 import { PerformanceWidget } from '@/components/performance/PerformanceWidget';
+import { ExtensionManager } from '@/components/extensions/ExtensionManager';
 import { motion } from 'framer-motion';
 import { useWindowAnimation } from '@/hooks/useMotionConfig';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
@@ -29,6 +30,7 @@ const DefaultContentRegistry: Record<WindowContentType, React.ComponentType<Reco
   SETTINGS: () => <Box p={2}>Settings content</Box>,
   CUSTOM: () => <Box p={2}>Custom content</Box>,
   PERFORMANCE: () => <PerformanceWidget />,
+  EXTENSION_MANAGER: () => <ExtensionManager />,
 };
 
 const fallbackContent = (type: WindowContentType, props?: Record<string, unknown>) => {
@@ -156,7 +158,37 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper', position: 'relative' }}>
-        {content}
+        {/* Content Layer */}
+        <Box sx={{ 
+          height: '100%', 
+          filter: win.isBlurred ? `blur(${win.blurAmount}px)` : 'none',
+          transition: 'filter 0.3s ease',
+          pointerEvents: win.isLocked ? 'none' : 'auto'
+        }}>
+          {content}
+        </Box>
+
+        {/* Lock Overlay */}
+        {win.isLocked && (
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(0,0,0,0.3)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 20,
+            flexDirection: 'column',
+            gap: 2
+          }}>
+            <Lock sx={{ fontSize: 48, color: 'white' }} />
+            <Typography variant="h6" color="white">Window Locked</Typography>
+          </Box>
+        )}
 
         {!win.isMaximized && (
           <Box

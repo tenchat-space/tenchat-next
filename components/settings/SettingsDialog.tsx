@@ -29,7 +29,8 @@ import {
   Close,
   Edit,
   Fingerprint,
-  AccountBalanceWallet
+  AccountBalanceWallet,
+  Extension
 } from '@mui/icons-material';
 import { Models } from 'appwrite';
 import { useAnimationContext } from '@/contexts/AnimationContext';
@@ -123,6 +124,15 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
     onClose();
   };
 
+  const handleOpenExtensionManager = () => {
+    openWindow({
+      title: 'Extension Manager',
+      type: 'EXTENSION_MANAGER',
+      component: null,
+    });
+    onClose();
+  };
+
   return (
     <Dialog
       open={open}
@@ -193,6 +203,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
             <Tab icon={<PaletteOutlined />} iconPosition="start" label="Appearance" />
             <Tab icon={<NotificationsNone />} iconPosition="start" label="Notifications" />
             <Tab icon={<AccountBalanceWallet />} iconPosition="start" label="Wallet" />
+            <Tab icon={<Extension />} iconPosition="start" label="Extensions" />
           </Tabs>
         </Box>
 
@@ -511,6 +522,25 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                 </Button>
               </Box>
             </Stack>
+          </TabPanel>
+
+          {/* Extensions Tab */}
+          <TabPanel value={activeTab} index={5}>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Extension sx={{ fontSize: 64, color: 'secondary.main', mb: 2 }} />
+              <Typography variant="h5" gutterBottom>Extension Kernel</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+                Manage system extensions and kernel-level plugins. This allows you to modify the behavior of the application safely.
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="secondary" 
+                size="large"
+                onClick={handleOpenExtensionManager}
+              >
+                Open Extension Manager
+              </Button>
+            </Box>
           </TabPanel>
         </Box>
       </Box>

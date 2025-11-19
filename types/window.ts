@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type WindowContentType = 'CHAT' | 'CALL' | 'PROFILE' | 'SETTINGS' | 'CUSTOM' | 'PERFORMANCE';
+export type WindowContentType = 'CHAT' | 'CALL' | 'PROFILE' | 'SETTINGS' | 'CUSTOM' | 'PERFORMANCE' | 'EXTENSION_MANAGER';
 
 export interface WindowTab {
   id: string;
@@ -21,6 +21,11 @@ export interface WindowInstance {
   isPoppedOut: boolean; // Real window pop-out
   zIndex: number;
   lastInteraction: number;
+  
+  // Security & Visual Properties (Kernel Managed)
+  isBlurred: boolean;
+  blurAmount: number; // px
+  isLocked: boolean;
 }
 
 export interface WindowContextType {
@@ -37,4 +42,8 @@ export interface WindowContextType {
   dockWindow: (id: string) => void; // Minimize to pocket
   mergeWindows: (sourceId: string, targetId: string) => void;
   popOutWindow: (id: string) => void; // Open in real window
+  
+  // Kernel Methods
+  setWindowBlur: (id: string, blurred: boolean, amount?: number) => void;
+  setWindowLock: (id: string, locked: boolean) => void;
 }
