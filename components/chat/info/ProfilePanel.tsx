@@ -16,9 +16,11 @@ import {
   AccountBalanceWalletOutlined,
   SecurityOutlined,
   VerifiedUserOutlined,
+  VideoCallOutlined,
 } from "@mui/icons-material";
 import { Models } from "appwrite";
 import { useTheme, alpha } from '@mui/material/styles';
+import { useWindow } from "@/contexts/WindowContext";
 
 interface ProfilePanelProps {
   currentAccount: Models.User<Models.Preferences> | null;
@@ -28,6 +30,22 @@ interface ProfilePanelProps {
 
 export function ProfilePanel({ currentAccount, logout, onOpenSettings }: ProfilePanelProps) {
   const theme = useTheme();
+  const { openWindow } = useWindow();
+
+  const handleStartCall = () => {
+    const meetId = `meet-${Math.random().toString(36).substr(2, 9)}`;
+    openWindow({
+      title: `Call with ${currentAccount?.name || 'Guest'}`,
+      type: 'CALL',
+      props: {
+        meetId,
+        participant: currentAccount?.name || 'Guest',
+        type: 'video'
+      }
+    }, {
+      size: { width: 400, height: 600 }
+    });
+  };
 
   return (
     <Box
@@ -66,9 +84,21 @@ export function ProfilePanel({ currentAccount, logout, onOpenSettings }: Profile
         </IconButton>
       </Stack>
 
-      <Button variant="outlined" size="small" onClick={logout} color="error" sx={{ borderRadius: 2 }}>
-        Sign Out
-      </Button>
+      <Stack direction="row" spacing={1}>
+        <Button 
+          variant="contained" 
+          size="small" 
+          startIcon={<VideoCallOutlined />}
+          onClick={handleStartCall}
+          fullWidth
+          sx={{ borderRadius: 2 }}
+        >
+          Call
+        </Button>
+        <Button variant="outlined" size="small" onClick={logout} color="error" sx={{ borderRadius: 2 }}>
+          Sign Out
+        </Button>
+      </Stack>
 
       <Divider />
 

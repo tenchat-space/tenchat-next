@@ -120,10 +120,14 @@ export class MeetingService {
   leave() {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream = null;
     }
     if (this.peerConnection) {
       this.peerConnection.close();
+      this.peerConnection = null;
     }
+    this.remoteStream = null;
+    this.roomId = null;
     this.signaling.disconnect();
   }
 

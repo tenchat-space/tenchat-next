@@ -11,12 +11,16 @@ export function useMeeting(meetId: string) {
   const [isCamOn, setIsCamOn] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const join = useCallback(async () => {
+  const join = useCallback(async (options?: { video?: boolean; audio?: boolean }) => {
     try {
       setState('connecting');
-      await meetingService.joinMeeting(meetId);
+      await meetingService.joinMeeting(meetId, options?.video ?? true, options?.audio ?? true);
       setLocalStream(meetingService.getLocalStream());
       setState('connected');
+      
+      // Sync state with options
+      if (options?.video === false) setIsCamOn(false);
+      if (options?.audio === false) setIsMicOn(false);
     } catch (err) {
       console.error("Failed to join meeting:", err);
       setError(err instanceof Error ? err.message : 'Failed to join meeting');
