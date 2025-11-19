@@ -12,6 +12,7 @@ import { CallWindow } from '@/components/window/CallWindow';
 import { PerformanceWidget } from '@/components/performance/PerformanceWidget';
 import { ExtensionManager } from '@/components/extensions/ExtensionManager';
 import { motion } from 'framer-motion';
+import { useTheme, alpha } from '@mui/material/styles';
 import { useWindowAnimation } from '@/hooks/useMotionConfig';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
 
@@ -46,6 +47,7 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
   const windowRef = useRef<HTMLDivElement>(null);
   const variants = useWindowAnimation();
   const feedback = useVisualFeedback();
+  const theme = useTheme();
 
   const { position, handleMouseDown: handleDragStart, isDragging } = useDraggable(
     windowRef,
@@ -187,7 +189,7 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(0,0,0,0.3)',
+            bgcolor: alpha(theme.palette.common.black, 0.3),
             backdropFilter: 'blur(5px)',
             zIndex: 20,
             flexDirection: 'column',

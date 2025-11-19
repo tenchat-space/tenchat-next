@@ -2,15 +2,19 @@ import React from 'react';
 import { Box, Typography, Stack, Button, Chip } from '@mui/material';
 import { usePerformance } from '@/contexts/PerformanceContext';
 import { Speed, CleaningServices } from '@mui/icons-material';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export function PerformanceWidget() {
   const { metrics, mode, setMode, config, recommendations, clearClutter } = usePerformance();
+  const theme = useTheme();
 
   const getHealthColor = (score: number) => {
     if (score > 80) return 'success.main';
     if (score > 50) return 'warning.main';
     return 'error.main';
   };
+
+  const cardBg = alpha(theme.palette.text.primary, 0.05);
 
   return (
     <Box sx={{ p: 2, minWidth: 300 }}>
@@ -33,13 +37,13 @@ export function PerformanceWidget() {
 
         {/* Metrics Grid */}
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          <Box sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Box sx={{ p: 2, bgcolor: cardBg, borderRadius: 2 }}>
             <Typography variant="caption" color="text.secondary">FPS</Typography>
             <Typography variant="h4" fontWeight="bold" color={metrics.fps < 30 ? 'error.main' : 'text.primary'}>
               {metrics.fps}
             </Typography>
           </Box>
-          <Box sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+          <Box sx={{ p: 2, bgcolor: cardBg, borderRadius: 2 }}>
             <Typography variant="caption" color="text.secondary">Windows</Typography>
             <Typography variant="h4" fontWeight="bold" color={metrics.windowCount > config.maxWindows ? 'warning.main' : 'text.primary'}>
               {metrics.windowCount} <Typography component="span" variant="caption" color="text.secondary">/ {config.maxWindows}</Typography>
@@ -67,7 +71,7 @@ export function PerformanceWidget() {
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
-          <Box sx={{ p: 2, bgcolor: 'rgba(255, 165, 0, 0.1)', borderRadius: 2, border: '1px solid rgba(255, 165, 0, 0.2)' }}>
+          <Box sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.1), borderRadius: 2, border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}` }}>
             <Typography variant="subtitle2" color="warning.main" gutterBottom>Recommendations</Typography>
             <Stack spacing={1}>
               {recommendations.map((rec, i) => (

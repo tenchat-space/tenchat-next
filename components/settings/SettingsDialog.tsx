@@ -242,11 +242,11 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                 gap: 2,
                 transition: 'all 0.2s',
                 '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  bgcolor: alpha(theme.palette.action.hover, 0.05),
                 },
                 '&.Mui-selected': {
                   color: 'secondary.main',
-                  bgcolor: 'rgba(250, 204, 21, 0.08)',
+                  bgcolor: alpha(theme.palette.secondary.main, 0.08),
                   borderRight: '3px solid',
                   borderColor: 'secondary.main'
                 }
@@ -355,7 +355,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
           <TabPanel value={activeTab} index={1}>
             <Stack spacing={3}>
               <motion.div whileHover={{ scale: 1.01 }}>
-                <Box sx={{ p: 2, bgcolor: 'rgba(34, 197, 94, 0.1)', borderRadius: 2, border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                <Box sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2, border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.3) }}>
                   <Stack direction="row" alignItems="center" spacing={2}>
                      <Security color="success" fontSize="large" />
                      <Box>
@@ -607,7 +607,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                 <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
                   <Fingerprint sx={{ fontSize: 64, color: 'secondary.main', mb: 2 }} />
                   <Typography variant="h5" gutterBottom fontWeight={700}>Wallet Connected</Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontFamily: 'monospace', bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1, display: 'inline-block' }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontFamily: 'monospace', bgcolor: alpha(theme.palette.text.primary, 0.1), p: 1, borderRadius: 1, display: 'inline-block' }}>
                     0x71C...9A23
                   </Typography>
                   <Box>

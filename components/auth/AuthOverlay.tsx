@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import { useAppwrite } from '@/contexts/AppwriteContext';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export function AuthOverlay() {
   const { isAuthenticated, isLoading, forceRefreshAuth } = useAppwrite();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const theme = useTheme();
 
   // If loading or already authenticated, don't show overlay
   if (isLoading || isAuthenticated) return null;
@@ -52,14 +54,14 @@ export function AuthOverlay() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'rgba(0,0,0,0.4)',
+        bgcolor: alpha(theme.palette.background.default, 0.8),
         backdropFilter: 'blur(10px)',
       }}
     >
-      <Typography variant="h4" sx={{ mb: 2, color: 'white', fontWeight: 'bold' }}>
+      <Typography variant="h4" sx={{ mb: 2, color: 'text.primary', fontWeight: 'bold' }}>
         Welcome to TenChat
       </Typography>
-      <Typography variant="body1" sx={{ mb: 4, color: 'rgba(255,255,255,0.8)' }}>
+      <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary' }}>
         Please sign in to continue
       </Typography>
       

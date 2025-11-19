@@ -26,6 +26,21 @@ export function StyleProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse saved style config", e);
       }
     }
+
+    // Listen for storage changes to sync across windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'tenchat-style-config' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setStyleConfig(prev => ({ ...prev, ...parsed }));
+        } catch (err) {
+          console.error("Failed to sync style from storage", err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const updateStyle = (updates: Partial<StyleConfig>) => {

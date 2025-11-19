@@ -3,11 +3,16 @@ import { Box, Button, Typography, Paper, Stack, TextField, Chip } from '@mui/mat
 import { useKernel } from '@/contexts/KernelContext';
 import { useWindow } from '@/contexts/WindowContext';
 import { ExtensionManifest } from '@/types/extension';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export function ExtensionManager() {
   const { api, installExtension, extensions } = useKernel();
   const { windows } = useWindow();
   const [targetWindowId, setTargetWindowId] = useState<string>('');
+  const theme = useTheme();
+
+  const paperBg = alpha(theme.palette.text.primary, 0.05);
+  const selectedBg = alpha(theme.palette.primary.main, 0.1);
 
   // Demo: Install a sample extension that adds a button to the chat header
   const installDemoExtension = () => {
@@ -59,7 +64,7 @@ export function ExtensionManager() {
     <Box p={3}>
       <Typography variant="h6" gutterBottom>Extension Kernel Manager</Typography>
       
-      <Paper sx={{ p: 2, mb: 3, bgcolor: 'rgba(255,255,255,0.05)' }}>
+      <Paper sx={{ p: 2, mb: 3, bgcolor: paperBg }}>
         <Typography variant="subtitle2" gutterBottom>Active Windows (Kernel View)</Typography>
         <Stack spacing={1}>
           {windows.map(w => (
@@ -71,7 +76,7 @@ export function ExtensionManager() {
                 border: '1px solid',
                 borderColor: targetWindowId === w.id ? 'primary.main' : 'divider',
                 cursor: 'pointer',
-                bgcolor: targetWindowId === w.id ? 'rgba(25, 118, 210, 0.1)' : 'transparent'
+                bgcolor: targetWindowId === w.id ? selectedBg : 'transparent'
               }}
             >
               <Typography variant="body2">{w.tabs[0]?.title} ({w.id})</Typography>

@@ -1,13 +1,16 @@
 import React from 'react';
 import { Box, Paper, Tooltip, Typography, Stack } from '@mui/material';
 import { useWindow } from '@/contexts/WindowContext';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export function WindowPocket() {
-
+  const theme = useTheme();
   const { windows, restoreWindow } = useWindow();
   const minimizedWindows = windows.filter(w => w.isMinimized);
 
   if (minimizedWindows.length === 0) return null;
+
+  const pocketBg = alpha(theme.palette.background.paper, 0.8);
 
   return (
     <Paper
@@ -20,7 +23,7 @@ export function WindowPocket() {
         zIndex: 1400,
         borderRadius: 4,
         p: 1,
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        bgcolor: pocketBg,
         backdropFilter: 'blur(8px)',
         border: '1px solid',
         borderColor: 'divider',

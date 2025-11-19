@@ -28,6 +28,7 @@ import { Conversation, useMessages } from "@/hooks/useMessaging";
 import { storageService } from "@/lib/appwrite/services/storage.service";
 import { BUCKET_IDS } from "@/lib/appwrite/config/constants";
 import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRenderer";
+import { useTheme, alpha } from '@mui/material/styles';
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -46,6 +47,7 @@ export function ChatWindow({
   const [composer, setComposer] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const theme = useTheme();
 
   const handleSendMessage = async () => {
     if (!conversation || !composer.trim()) return;
@@ -101,6 +103,15 @@ export function ChatWindow({
     return "Tenchat room";
   };
 
+  const headerBg = alpha(theme.palette.background.paper, 0.8);
+  const messageOtherBg = alpha(theme.palette.text.primary, 0.05);
+  const messageOtherBorder = alpha(theme.palette.divider, 0.1);
+  const inputBg = alpha(theme.palette.text.primary, 0.03);
+  const inputBorder = alpha(theme.palette.divider, 0.1);
+  const inputBorderHover = alpha(theme.palette.divider, 0.2);
+  const sendBtnBg = alpha(theme.palette.secondary.main, 0.1);
+  const sendBtnHover = alpha(theme.palette.secondary.main, 0.2);
+
   return (
     <Box
       sx={{
@@ -109,11 +120,11 @@ export function ChatWindow({
         flexDirection: "column",
         bgcolor: "background.default",
         backgroundImage:
-          "radial-gradient(circle at top right, rgba(250,204,21,0.15), transparent 55%), linear-gradient(160deg, rgba(124,58,237,0.7), transparent 65%)",
+          `radial-gradient(circle at top right, ${alpha(theme.palette.secondary.main, 0.15)}, transparent 55%), linear-gradient(160deg, ${alpha(theme.palette.primary.main, 0.7)}, transparent 65%)`,
       }}
     >
       {/* Chat Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", backdropFilter: "blur(10px)", bgcolor: "rgba(12, 4, 11, 0.5)" }}>
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", backdropFilter: "blur(10px)", bgcolor: headerBg }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack>
             <Typography variant="h6" sx={{ color: "secondary.main", fontWeight: 600 }}>
@@ -197,13 +208,13 @@ export function ChatWindow({
                       sx={{
                         p: 2,
                         px: 2.5,
-                        bgcolor: isSelf ? "primary.main" : "rgba(255,255,255,0.05)",
+                        bgcolor: isSelf ? "primary.main" : messageOtherBg,
                         color: isSelf ? "primary.contrastText" : "text.primary",
                         borderRadius: isSelf ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         position: 'relative',
-                        backgroundImage: isSelf ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'none',
-                        border: isSelf ? 'none' : '1px solid rgba(255,255,255,0.1)'
+                        backgroundImage: isSelf ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})` : 'none',
+                        border: isSelf ? 'none' : `1px solid ${messageOtherBorder}`
                       }}
                     >
                       {!isSelf && (
@@ -292,10 +303,10 @@ export function ChatWindow({
               maxRows={4}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  bgcolor: "rgba(255,255,255,0.03)",
+                  bgcolor: inputBg,
                   borderRadius: 3,
-                  "& fieldset": { borderColor: "rgba(255,255,255,0.1)" },
-                  "&:hover fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+                  "& fieldset": { borderColor: inputBorder },
+                  "&:hover fieldset": { borderColor: inputBorderHover },
                   "&.Mui-focused fieldset": { borderColor: "secondary.main" }
                 }
               }}
@@ -316,8 +327,8 @@ export function ChatWindow({
                 onClick={handleSendMessage}
                 disabled={!conversation || !isAuthenticated}
                 sx={{ 
-                  bgcolor: 'rgba(250, 204, 21, 0.1)', 
-                  '&:hover': { bgcolor: 'rgba(250, 204, 21, 0.2)' },
+                  bgcolor: sendBtnBg, 
+                  '&:hover': { bgcolor: sendBtnHover },
                   width: 48,
                   height: 48 
                 }}
