@@ -6,7 +6,6 @@ import { AppwriteProvider } from "@/contexts/AppwriteContext";
 import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
 import { AnimationProvider } from "@/contexts/AnimationContext";
 import { StyleProvider } from "@/contexts/StyleContext";
-import { PerformanceProvider } from "@/contexts/PerformanceContext";
 import { WindowSystem } from "@/components/window/WindowSystem";
 
 const geistSans = Geist({
@@ -37,11 +36,9 @@ export default function RootLayout({
             <AnimationProvider>
               <AppwriteProvider>
                 <ContextMenuProvider>
-                  <PerformanceProvider>
-                    <WindowSystem>
-                      {children}
-                    </WindowSystem>
-                  </PerformanceProvider>
+                  <WindowSystem>
+                    {children}
+                  </WindowSystem>
                 </ContextMenuProvider>
               </AppwriteProvider>
             </AnimationProvider>
