@@ -10,8 +10,11 @@ import {
   Switch,
   FormControlLabel,
   Stack,
-  Typography
+  Typography,
+  CircularProgress
 } from "@mui/material";
+import { useAppwrite } from "@/contexts/AppwriteContext";
+import { messagingService } from "@/lib/appwrite";
 
 interface CreateChannelDialogProps {
   open: boolean;
@@ -19,13 +22,35 @@ interface CreateChannelDialogProps {
 }
 
 export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps) {
+  const { currentAccount } = useAppwrite();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreate = () => {
-    // Mock creation logic
-    console.log("Creating channel:", { name, isPrivate });
-    onClose();
+  const handleCreate = async () => {
+    if (!currentAccount || !name) return;
+
+    try {
+      setIsLoading(true);
+      await messagingService.createConversation({
+        type: 'channel',
+        name,
+        description,
+        creatorId: currentAccount.$id,
+        participantIds: [currentAccount.$id],
+        adminIds: [currentAccount.$id],
+        // In a real app, we'd handle privacy settings here
+      });
+      onClose();
+      setName("");
+      setDescription("");
+      setIsPrivate(false);
+    } catch (error) {
+      console.error("Failed to create channel:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +63,7 @@ export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps)
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={isLoading}
           />
           <TextField
             label="Description (Optional)"
@@ -45,10 +71,13 @@ export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps)
             multiline
             rows={3}
             placeholder="What is this channel about?"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={isLoading}
           />
           <Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
             <FormControlLabel
-              control={<Switch checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} color="secondary" />}
+              control={<Switch checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} color="secondary" disabled={isLoading} />}
               label="Private Channel"
             />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 4 }}>
@@ -60,9 +89,14 @@ export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps)
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" color="secondary" onClick={handleCreate} disabled={!name}>
-          Create
+        <Button onClick={onClose} disabled={isLoading}>Cancel</Button>
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={handleCreate} 
+          disabled={!name || isLoading}
+        >
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Create"}
         </Button>
       </DialogActions>
     </Dialog>

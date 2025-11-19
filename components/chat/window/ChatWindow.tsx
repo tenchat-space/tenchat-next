@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   Typography,
   InputAdornment,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import {
   AttachFile,
@@ -21,8 +22,11 @@ import {
   VideoCall,
   Check,
   DoneAll,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import { Conversation, useMessages } from "@/hooks/useMessaging";
+import { storageService } from "@/lib/appwrite/services/storage.service";
+import { BUCKET_IDS } from "@/lib/appwrite/config/constants";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -39,6 +43,8 @@ export function ChatWindow({
 }: ChatWindowProps) {
   const { messages, isLoading, sendMessage } = useMessages(conversation?.$id || "");
   const [composer, setComposer] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSendMessage = async () => {
     if (!conversation || !composer.trim()) return;
@@ -52,6 +58,36 @@ export function ChatWindow({
       setComposer("");
     } catch (error) {
       console.error("Message send failed", error);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !conversation) return;
+
+    try {
+      setIsUploading(true);
+      const uploadedFile = await storageService.uploadMessageAttachment(file);
+      
+      await sendMessage({
+        conversationId: conversation.$id,
+        senderId: currentUserId,
+        content: "Sent an image",
+        contentType: "image",
+        metadata: {
+          fileId: uploadedFile.$id,
+          bucketId: BUCKET_IDS.MESSAGES,
+          fileName: file.name,
+          mimeType: file.type,
+        }
+      });
+    } catch (error) {
+      console.error("File upload failed", error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -171,9 +207,26 @@ export function ChatWindow({
                           {message.senderId}
                         </Typography>
                       )}
-                      <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
-                        {message.content}
-                      </Typography>
+                      
+                      {message.contentType === 'image' && message.metadata?.fileId ? (
+                        <Box 
+                          component="img"
+                          src={storageService.getFilePreview(message.metadata.bucketId, message.metadata.fileId, 400, 0)}
+                          alt="Attachment"
+                          sx={{
+                            maxWidth: '100%',
+                            maxHeight: 300,
+                            borderRadius: 2,
+                            mb: 1,
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(storageService.getFileView(message.metadata.bucketId, message.metadata.fileId), '_blank')}
+                        />
+                      ) : (
+                        <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                          {message.content}
+                        </Typography>
+                      )}
                       
                       <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.5} sx={{ mt: 0.5, opacity: 0.7 }}>
                         <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
@@ -194,8 +247,19 @@ export function ChatWindow({
         {/* Input Area */}
         <Box sx={{ p: 2, bgcolor: "background.paper", borderTop: 1, borderColor: "divider" }}>
           <Stack direction="row" spacing={1} alignItems="center">
-            <IconButton color="secondary" disabled={!conversation}>
-              <AttachFile />
+            <input
+              type="file"
+              hidden
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+            />
+            <IconButton 
+              color="secondary" 
+              disabled={!conversation || isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading ? <CircularProgress size={24} color="inherit" /> : <AttachFile />}
             </IconButton>
             
             <TextField

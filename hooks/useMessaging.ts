@@ -19,6 +19,7 @@ export interface ChatMessage {
   content: string;
   conversationId: string;
   contentType?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface TypingIndicator {
