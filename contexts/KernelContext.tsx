@@ -55,6 +55,7 @@ const KernelContext = createContext<KernelContextType | undefined>(undefined);
 
 export function KernelProvider({ children }: { children: ReactNode }) {
   const windowContext = useWindow();
+  const styleContext = useStyle();
   const [extensions, setExtensions] = useState<ExtensionManifest[]>(PRE_INSTALLED_EXTENSIONS);
   const [registeredWidgets, setRegisteredWidgets] = useState<Record<string, ReactNode[]>>({});
 
@@ -204,6 +205,9 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     },
     manageExtensions: async () => {
       console.log("[System] Opening extension manager");
+    },
+    registerPalette: (id, palette) => {
+      styleContext.registerPalette(id, palette);
     }
   };
 
@@ -235,6 +239,18 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 10. Implement Theme API
+  const themeApi: ThemeAPI = {
+    getMode: () => styleContext.styleConfig.themeMode,
+    getPalette: () => styleContext.styleConfig.paletteId,
+    setPalette: async (paletteId: string) => {
+      styleContext.updateStyle({ paletteId });
+    },
+    setMode: async (mode) => {
+      styleContext.updateStyle({ themeMode: mode });
+    }
+  };
+
   // The full API (for Core use)
   const coreApi: TenchatAPI = {
     window: windowApi,
@@ -245,7 +261,8 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     ai: aiApi,
     system: systemApi,
     blockchain: blockchainApi,
-    network: networkApi
+    network: networkApi,
+    theme: themeApi
   };
 
   // Helper to get API for a specific extension
@@ -267,6 +284,7 @@ export function KernelProvider({ children }: { children: ReactNode }) {
         summarize: aiApi.summarize,
         suggestReply: aiApi.suggestReply
       },
+      theme: themeApi,
       // System API is restricted/hidden
       system: {
         getVersion: systemApi.getVersion,

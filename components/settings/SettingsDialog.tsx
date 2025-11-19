@@ -106,7 +106,7 @@ const MotionListItem = ({ children, ...props }: any) => {
 export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState(0);
   const { level, setLevel, style, setStyle } = useAnimationContext();
-  const { styleConfig, updateStyle } = useStyle();
+  const { styleConfig, updateStyle, availablePalettes } = useStyle();
   const { mode, setMode } = usePerformance();
   const { openWindow } = useWindow();
   const { whileHover, whileTap } = useVisualFeedback();
@@ -381,14 +381,35 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
           {/* Appearance Tab */}
           <TabPanel value={activeTab} index={2}>
              <Typography variant="overline" color="text.secondary" fontWeight={700}>THEME</Typography>
-             <List disablePadding sx={{ mb: 3 }}>
+             <List disablePadding sx={{ mb: 2 }}>
                <MotionListItem>
                  <ListItemText primary="Dark Mode" />
                  <ListItemSecondaryAction>
-                   <Switch defaultChecked color="secondary" />
+                   <Switch 
+                     checked={styleConfig.themeMode === 'dark'} 
+                     onChange={(e) => updateStyle({ themeMode: e.target.checked ? 'dark' : 'light' })}
+                     color="secondary" 
+                   />
                  </ListItemSecondaryAction>
                </MotionListItem>
              </List>
+
+             <Box sx={{ mb: 3, px: 1 }}>
+               <Typography variant="caption" color="text.secondary" gutterBottom>Color Palette</Typography>
+               <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                 <Select
+                   value={styleConfig.paletteId}
+                   onChange={(e) => updateStyle({ paletteId: e.target.value })}
+                   sx={{ borderRadius: 2 }}
+                 >
+                   {Object.entries(availablePalettes).map(([id, group]) => (
+                     <MenuItem key={id} value={id}>
+                       {group.light.name}
+                     </MenuItem>
+                   ))}
+                 </Select>
+               </FormControl>
+             </Box>
 
              <Typography variant="overline" color="text.secondary" fontWeight={700}>PERFORMANCE</Typography>
              <Box sx={{ mb: 3, mt: 1 }}>
