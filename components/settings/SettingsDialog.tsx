@@ -24,7 +24,8 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
-  Paper
+  Paper,
+  alpha
 } from '@mui/material';
 import {
   PersonOutline,
@@ -47,6 +48,7 @@ import { PerformanceMode } from '@/types/performance';
 import { useWindow } from '@/contexts/WindowContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
+import { useTheme } from '@mui/material/styles';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -92,9 +94,12 @@ function TabPanel(props: TabPanelProps) {
 
 const MotionListItem = ({ children, ...props }: any) => {
   const { whileHover, whileTap } = useVisualFeedback();
+  const theme = useTheme();
+  const paperBg = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.25 : 0.75);
+
   return (
     <motion.div whileHover={whileHover} whileTap={whileTap}>
-      <Paper elevation={0} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2, overflow: 'hidden' }}>
+      <Paper elevation={0} sx={{ mb: 1, bgcolor: paperBg, borderRadius: 2, overflow: 'hidden' }}>
         <ListItem {...props}>
           {children}
         </ListItem>
@@ -110,6 +115,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
   const { mode, setMode } = usePerformance();
   const { openWindow } = useWindow();
   const { whileHover, whileTap } = useVisualFeedback();
+  const theme = useTheme();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -163,18 +169,34 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
   };
 
   // Dynamic styles based on settings
+  const overlayGradientStart = theme.palette.mode === 'dark'
+    ? alpha(theme.palette.background.paper, 0.95)
+    : alpha(theme.palette.background.paper, 0.92);
+  const overlayGradientEnd = theme.palette.mode === 'dark'
+    ? alpha(theme.palette.background.default, 0.9)
+    : alpha(theme.palette.background.default, 0.85);
+  const overlayShadowColor = alpha(theme.palette.common.black, theme.palette.mode === 'dark' ? 0.6 : 0.25);
+  const overlayBorderColor = alpha(theme.palette.primary.main, 0.35);
+
+  const sidebarBg = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.45 : 0.95);
+  const sidebarBorderColor = alpha(theme.palette.divider, 0.3);
+  const headerBorderColor = alpha(theme.palette.divider, 0.35);
   const dialogStyle = {
     height: '80vh',
     maxHeight: 700,
     display: 'flex',
     flexDirection: 'column',
     bgcolor: 'background.paper',
-    backgroundImage: 'linear-gradient(135deg, rgba(19, 11, 31, 0.95), rgba(12, 4, 11, 0.98))',
+    backgroundImage: `linear-gradient(135deg, ${overlayGradientStart}, ${overlayGradientEnd})`,
     backdropFilter: styleConfig.blur === 'none' ? 'none' : `blur(${styleConfig.blur === 'high' ? 20 : 10}px)`,
     borderRadius: styleConfig.borderRadius === 'none' ? 0 : 3,
-    border: '1px solid rgba(250, 204, 21, 0.15)',
-    boxShadow: styleConfig.depth === 'flat' ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-  };
+    borderColor: overlayBorderColor,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    boxShadow: styleConfig.depth === 'flat'
+      ? 'none'
+      : `0 25px 50px -12px ${overlayShadowColor}`,
+  } as const;
 
   return (
     <Dialog
@@ -191,10 +213,10 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
         <Box sx={{ 
           width: 240, 
           borderRight: 1, 
-          borderColor: 'divider',
+          borderColor: sidebarBorderColor,
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: 'rgba(255, 255, 255, 0.02)'
+          bgcolor: sidebarBg
         }}>
           <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: 1 }}>SETTINGS</Typography>
@@ -245,7 +267,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
 
         {/* Content Area */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2, borderBottom: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2, borderBottom: 1, borderColor: headerBorderColor }}>
              <motion.div whileHover={{ rotate: 90 }} whileTap={{ scale: 0.9 }}>
                <IconButton onClick={onClose} edge="end" size="small">
                  <Close />
