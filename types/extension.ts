@@ -34,6 +34,13 @@ export interface TenchatAPI {
   // System Space APIs (Restricted to Core/Privileged Extensions)
   system?: SystemAPI;
   blockchain?: BlockchainAPI;
+  network?: NetworkAPI;
+}
+
+export interface NetworkAPI {
+  getStatus: () => 'connected' | 'connecting' | 'disconnected' | 'error';
+  getBackendType: () => 'appwrite' | 'p2p' | 'custom';
+  switchBackend: (type: 'appwrite' | 'p2p' | 'custom') => Promise<void>;
 }
 
 export interface BlockchainAPI {

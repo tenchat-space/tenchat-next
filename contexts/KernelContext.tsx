@@ -13,10 +13,14 @@ import {
   AIAPI,
   SystemAPI,
   BlockchainAPI,
+  NetworkAPI,
   ExtensionSlot,
   ExtensionPermission,
   MessagingAPI
 } from '@/types/extension';
+import { BackendManager } from '@/lib/network/manager';
+import { AppwriteAdapter } from '@/lib/network/adapters/appwrite';
+import { P2PAdapter } from '@/lib/network/adapters/p2p';
 
 interface KernelContextType {
   api: TenchatAPI;

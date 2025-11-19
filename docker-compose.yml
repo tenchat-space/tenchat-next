@@ -1,0 +1,23 @@
+
+version: '3.8'
+
+services:
+  tenchat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tenchat-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Add your Appwrite config here if needed
+      - NEXT_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+      - NEXT_PUBLIC_APPWRITE_PROJECT_ID=your-project-id
+    networks:
+      - tenchat-net
+
+networks:
+  tenchat-net:
+    driver: bridge
