@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useWindow } from './WindowContext';
+import { useStyle } from './StyleContext';
 import { 
   TenchatAPI, 
   WindowAPI, 
@@ -16,7 +17,8 @@ import {
   NetworkAPI,
   ExtensionSlot,
   ExtensionPermission,
-  MessagingAPI
+  MessagingAPI,
+  ThemeAPI
 } from '@/types/extension';
 import { BackendManager } from '@/lib/network/manager';
 import { AppwriteAdapter } from '@/lib/network/adapters/appwrite';

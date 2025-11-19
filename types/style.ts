@@ -1,3 +1,5 @@
+import { ThemeMode } from './theme';
+
 export type BorderRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
 export type DepthLevel = 'flat' | 'low' | 'medium' | 'high' | 'extreme';
 export type BlurLevel = 'none' | 'low' | 'medium' | 'high';
@@ -10,6 +12,8 @@ export interface StyleConfig {
   borderStyle: BorderStyle;
   scaleOnHover: boolean;
   activeGlow: boolean;
+  themeMode: ThemeMode;
+  paletteId: string;
 }
 
 export interface StyleContextType {
@@ -25,6 +29,8 @@ export const DEFAULT_STYLE: StyleConfig = {
   borderStyle: 'diffuse',
   scaleOnHover: true,
   activeGlow: true,
+  themeMode: 'system',
+  paletteId: 'default',
 };
 
 export const BORDER_RADIUS_VALUES: Record<BorderRadius, number> = {

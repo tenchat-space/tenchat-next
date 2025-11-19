@@ -1,5 +1,6 @@
 
 import { ReactNode } from 'react';
+import { ThemeMode, ColorPalette } from './theme';
 
 export type ExtensionId = string;
 
@@ -20,7 +21,8 @@ export type ExtensionPermission =
   | 'messaging:send'
   | 'storage:read'
   | 'storage:write'
-  | 'system:notification';
+  | 'system:notification'
+  | 'theme:control';
 
 export interface TenchatAPI {
   // User Space APIs (Exposed to Extensions)
@@ -30,11 +32,19 @@ export interface TenchatAPI {
   storage: StorageAPI;
   user: UserAPI;
   ai: AIAPI;
+  theme: ThemeAPI;
   
   // System Space APIs (Restricted to Core/Privileged Extensions)
   system?: SystemAPI;
   blockchain?: BlockchainAPI;
   network?: NetworkAPI;
+}
+
+export interface ThemeAPI {
+  getMode: () => ThemeMode;
+  getPalette: () => string;
+  setPalette: (paletteId: string) => Promise<void>;
+  setMode: (mode: ThemeMode) => Promise<void>;
 }
 
 export interface NetworkAPI {
@@ -117,6 +127,9 @@ export interface SystemAPI {
   accessKernelMemory?: () => Promise<unknown>;
   manageExtensions?: () => Promise<void>;
   notify: (msg: string) => void;
+  
+  // System Theme Control
+  registerPalette?: (id: string, palette: { light: ColorPalette; dark: ColorPalette }) => void;
 }
 
 export interface ExtensionInstance {
@@ -125,3 +138,4 @@ export interface ExtensionInstance {
   onInit: () => void;
   onDestroy: () => void;
 }
+

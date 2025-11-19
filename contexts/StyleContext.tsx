@@ -2,11 +2,18 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { StyleConfig, StyleContextType, DEFAULT_STYLE } from '@/types/style';
+import { THEME_PALETTES, ColorPalette } from '@/types/theme';
 
-const StyleContext = createContext<StyleContextType | undefined>(undefined);
+interface ExtendedStyleContextType extends StyleContextType {
+  availablePalettes: Record<string, { light: ColorPalette; dark: ColorPalette }>;
+  registerPalette: (id: string, palette: { light: ColorPalette; dark: ColorPalette }) => void;
+}
+
+const StyleContext = createContext<ExtendedStyleContextType | undefined>(undefined);
 
 export function StyleProvider({ children }: { children: ReactNode }) {
   const [styleConfig, setStyleConfig] = useState<StyleConfig>(DEFAULT_STYLE);
+  const [availablePalettes, setAvailablePalettes] = useState(THEME_PALETTES);
 
   useEffect(() => {
     // Load saved style preference
@@ -34,8 +41,12 @@ export function StyleProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('tenchat-style-config');
   };
 
+  const registerPalette = (id: string, palette: { light: ColorPalette; dark: ColorPalette }) => {
+    setAvailablePalettes(prev => ({ ...prev, [id]: palette }));
+  };
+
   return (
-    <StyleContext.Provider value={{ styleConfig, updateStyle, resetStyle }}>
+    <StyleContext.Provider value={{ styleConfig, updateStyle, resetStyle, availablePalettes, registerPalette }}>
       {children}
     </StyleContext.Provider>
   );
