@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from 'react';
-import { Box, IconButton, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { Close, CropSquare, Minimize, OpenInNew } from '@mui/icons-material';
 import { WindowInstance, WindowContentType } from '@/types/window';
 import { useWindow } from '@/contexts/WindowContext';
@@ -10,8 +10,10 @@ import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
 import { motion } from 'framer-motion';
 import { useWindowAnimation } from '@/hooks/useMotionConfig';
+import { useVisualFeedback } from '@/hooks/useVisualFeedback';
 
 const MotionPaper = motion(Paper);
+const MotionIconButton = motion(IconButton);
 
 const DefaultContentRegistry: Record<WindowContentType, React.ComponentType<Record<string, unknown>>> = {
   CHAT: (props) => {
@@ -35,9 +37,9 @@ const fallbackContent = (type: WindowContentType, props?: Record<string, unknown
 
 export function VirtualWindow({ window: win }: { window: WindowInstance }) {
   const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindow();
-  const theme = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
   const variants = useWindowAnimation();
+  const feedback = useVisualFeedback();
 
   const { position, handleMouseDown: handleDragStart, isDragging } = useDraggable(
     windowRef,
@@ -79,8 +81,11 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        borderRadius: win.isMaximized ? 0 : 2,
-        border: win.isMaximized ? 'none' : `1px solid ${theme.palette.divider}`,
+        // Let the theme handle border radius and border style via MuiPaper overrides
+        // Only override for maximized state
+        borderRadius: win.isMaximized ? 0 : undefined, 
+        border: win.isMaximized ? 'none' : undefined,
+        
         // Remove transition for position/size if we are dragging/resizing, 
         // but we might want to keep it for the entrance/exit animation?
         // Framer motion handles the entrance/exit via variants.
@@ -116,10 +121,16 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
         </Stack>
 
         <Stack direction="row" spacing={0.5}>
-          <IconButton size="small" onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}>
+          <MotionIconButton 
+            size="small" 
+            onClick={(e) => { e.stopPropagation(); minimizeWindow(win.id); }}
+            {...feedback}
+          >
             <Minimize fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={(e) => {
+          </MotionIconButton>
+          <MotionIconButton 
+            size="small" 
+            onClick={(e) => {
               e.stopPropagation();
               if (win.isMaximized) {
                 restoreWindow(win.id);
@@ -127,12 +138,18 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
                 maximizeWindow(win.id);
               }
             }}
+            {...feedback}
           >
             {win.isMaximized ? <OpenInNew fontSize="small" sx={{ transform: 'rotate(180deg)' }} /> : <CropSquare fontSize="small" />}
-          </IconButton>
-          <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}>
+          </MotionIconButton>
+          <MotionIconButton 
+            size="small" 
+            color="error" 
+            onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}
+            {...feedback}
+          >
             <Close fontSize="small" />
-          </IconButton>
+          </MotionIconButton>
         </Stack>
       </Box>
 

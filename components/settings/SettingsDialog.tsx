@@ -34,7 +34,9 @@ import {
 import { Models } from 'appwrite';
 import { useAnimationContext } from '@/contexts/AnimationContext';
 import { AnimationLevel, AnimationStyle } from '@/types/animation';
-import { ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
+import { useStyle } from '@/contexts/StyleContext';
+import { BorderRadius, DepthLevel, BlurLevel, BorderStyle } from '@/types/style';
+import { ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Slider } from '@mui/material';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -72,6 +74,7 @@ function TabPanel(props: TabPanelProps) {
 export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState(0);
   const { level, setLevel, style, setStyle } = useAnimationContext();
+  const { styleConfig, updateStyle } = useStyle();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -88,6 +91,18 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
 
   const handleStyleChange = (event: SelectChangeEvent<AnimationStyle>) => {
     setStyle(event.target.value as AnimationStyle);
+  };
+
+  const handleRadiusChange = (event: React.MouseEvent<HTMLElement>, newRadius: BorderRadius | null) => {
+    if (newRadius !== null) updateStyle({ borderRadius: newRadius });
+  };
+
+  const handleDepthChange = (event: React.MouseEvent<HTMLElement>, newDepth: DepthLevel | null) => {
+    if (newDepth !== null) updateStyle({ depth: newDepth });
+  };
+
+  const handleBlurChange = (event: React.MouseEvent<HTMLElement>, newBlur: BlurLevel | null) => {
+    if (newBlur !== null) updateStyle({ blur: newBlur });
   };
 
   return (
@@ -296,6 +311,83 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                  <ListItemText primary="Dark Mode" />
                  <ListItemSecondaryAction>
                    <Switch defaultChecked color="secondary" />
+                 </ListItemSecondaryAction>
+               </ListItem>
+             </List>
+
+             <Divider sx={{ my: 2 }} />
+             
+             <Typography variant="h6" gutterBottom>Interface Style</Typography>
+             
+             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>Border Radius</Typography>
+             <ToggleButtonGroup
+                value={styleConfig.borderRadius}
+                exclusive
+                onChange={handleRadiusChange}
+                aria-label="border radius"
+                fullWidth
+                size="small"
+                color="secondary"
+              >
+                <ToggleButton value="none">None</ToggleButton>
+                <ToggleButton value="sm">Small</ToggleButton>
+                <ToggleButton value="md">Medium</ToggleButton>
+                <ToggleButton value="lg">Large</ToggleButton>
+                <ToggleButton value="xl">X-Large</ToggleButton>
+              </ToggleButtonGroup>
+
+             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>Depth (3D Effect)</Typography>
+             <ToggleButtonGroup
+                value={styleConfig.depth}
+                exclusive
+                onChange={handleDepthChange}
+                aria-label="depth"
+                fullWidth
+                size="small"
+                color="secondary"
+              >
+                <ToggleButton value="flat">Flat</ToggleButton>
+                <ToggleButton value="low">Low</ToggleButton>
+                <ToggleButton value="medium">Medium</ToggleButton>
+                <ToggleButton value="high">High</ToggleButton>
+                <ToggleButton value="extreme">Extreme</ToggleButton>
+              </ToggleButtonGroup>
+
+             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>Glass Blur</Typography>
+             <ToggleButtonGroup
+                value={styleConfig.blur}
+                exclusive
+                onChange={handleBlurChange}
+                aria-label="blur"
+                fullWidth
+                size="small"
+                color="secondary"
+              >
+                <ToggleButton value="none">None</ToggleButton>
+                <ToggleButton value="low">Low</ToggleButton>
+                <ToggleButton value="medium">Medium</ToggleButton>
+                <ToggleButton value="high">High</ToggleButton>
+              </ToggleButtonGroup>
+
+             <List sx={{ mt: 2 }}>
+               <ListItem>
+                 <ListItemText primary="Scale on Hover" secondary="Elements grow slightly when hovered" />
+                 <ListItemSecondaryAction>
+                   <Switch 
+                     checked={styleConfig.scaleOnHover} 
+                     onChange={(e) => updateStyle({ scaleOnHover: e.target.checked })} 
+                     color="secondary" 
+                   />
+                 </ListItemSecondaryAction>
+               </ListItem>
+               <ListItem>
+                 <ListItemText primary="Active Glow" secondary="Elements glow when active or hovered" />
+                 <ListItemSecondaryAction>
+                   <Switch 
+                     checked={styleConfig.activeGlow} 
+                     onChange={(e) => updateStyle({ activeGlow: e.target.checked })} 
+                     color="secondary" 
+                   />
                  </ListItemSecondaryAction>
                </ListItem>
              </List>

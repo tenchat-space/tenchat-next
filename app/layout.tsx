@@ -5,6 +5,7 @@ import { TenchatThemeProvider } from "@/components/providers/TenchatThemeProvide
 import { AppwriteProvider } from "@/contexts/AppwriteContext";
 import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
 import { AnimationProvider } from "@/contexts/AnimationContext";
+import { StyleProvider } from "@/contexts/StyleContext";
 import { WindowSystem } from "@/components/window/WindowSystem";
 
 const geistSans = Geist({
@@ -30,15 +31,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <TenchatThemeProvider>
-          <AnimationProvider>
-            <AppwriteProvider>
-              <ContextMenuProvider>
-                <WindowSystem>{children}</WindowSystem>
-              </ContextMenuProvider>
-            </AppwriteProvider>
-          </AnimationProvider>
-        </TenchatThemeProvider>
+        <StyleProvider>
+          <TenchatThemeProvider>
+            <AnimationProvider>
+              <AppwriteProvider>
+                <ContextMenuProvider>
+                  <WindowSystem>{children}</WindowSystem>
+                </ContextMenuProvider>
+              </AppwriteProvider>
+            </AnimationProvider>
+          </TenchatThemeProvider>
+        </StyleProvider>
       </body>
     </html>
   );
