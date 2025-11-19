@@ -2,12 +2,27 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useWindow } from './WindowContext';
-import { TenchatAPI, WindowAPI, WindowConfig, ExtensionManifest } from '@/types/extension';
+import { 
+  TenchatAPI, 
+  WindowAPI, 
+  WindowConfig, 
+  ExtensionManifest,
+  UIAPI,
+  StorageAPI,
+  UserAPI,
+  AIAPI,
+  SystemAPI,
+  ExtensionSlot,
+  ExtensionPermission,
+  MessagingAPI
+} from '@/types/extension';
 
 interface KernelContextType {
   api: TenchatAPI;
   installExtension: (manifest: ExtensionManifest, script: string) => Promise<void>;
   extensions: ExtensionManifest[];
+  // Internal registry for UI components
+  registeredWidgets: Record<string, ReactNode[]>;
 }
 
 const KernelContext = createContext<KernelContextType | undefined>(undefined);
@@ -15,6 +30,7 @@ const KernelContext = createContext<KernelContextType | undefined>(undefined);
 export function KernelProvider({ children }: { children: ReactNode }) {
   const windowContext = useWindow();
   const [extensions, setExtensions] = useState<ExtensionManifest[]>([]);
+  const [registeredWidgets, setRegisteredWidgets] = useState<Record<string, ReactNode[]>>({});
 
   // 1. Implement the Window API
   const windowApi: WindowAPI = {
@@ -59,25 +75,82 @@ export function KernelProvider({ children }: { children: ReactNode }) {
   };
 
   // 2. Implement Messaging API (Placeholder)
-  const messagingApi = {
+  const messagingApi: MessagingAPI = {
     send: async (content: string, recipient: string) => {
       console.log(`[Kernel] Sending message to ${recipient}: ${content}`);
     },
     onReceive: (callback: (msg: unknown) => void) => {
+      // In real implementation, subscribe to websocket/event bus
       return () => {};
     }
   };
 
-  // 3. Implement System API
-  const systemApi = {
-    notify: (msg: string) => {
-      console.log(`[Kernel] Notification: ${msg}`);
+  // 3. Implement UI API
+  const uiApi: UIAPI = {
+    showToast: (message: string, type = 'info') => {
+      console.log(`[Toast] ${type}: ${message}`);
+      // TODO: Connect to global toast provider
+    },
+    registerWidget: (slot: ExtensionSlot, component: ReactNode) => {
+      setRegisteredWidgets(prev => ({
+        ...prev,
+        [slot]: [...(prev[slot] || []), component]
+      }));
+    },
+    registerMenuItem: (location, label, action) => {
+      console.log(`[Menu] Registered ${label} at ${location}`);
+    }
+  };
+
+  // 4. Implement Storage API
+  const storageApi: StorageAPI = {
+    get: async function<T>(key: string): Promise<T | null> {
+      const val = localStorage.getItem(`ext_storage_${key}`);
+      return val ? JSON.parse(val) : null;
+    },
+    set: async function<T>(key: string, value: T) {
+      localStorage.setItem(`ext_storage_${key}`, JSON.stringify(value));
+    },
+    remove: async (key: string) => {
+      localStorage.removeItem(`ext_storage_${key}`);
+    }
+  };
+
+  // 5. Implement User API
+  const userApi: UserAPI = {
+    getCurrentUser: async () => {
+      // Mock data - should come from AuthContext
+      return { id: 'user-1', name: 'Demo User' };
+    }
+  };
+
+  // 6. Implement AI API
+  const aiApi: AIAPI = {
+    summarize: async (text: string) => {
+      return `Summary of: ${text.substring(0, 20)}...`;
+    },
+    suggestReply: async (context: string[]) => {
+      return ["Sounds good!", "I'll check it out.", "Can we talk later?"];
+    }
+  };
+
+  // 7. Implement System API
+  const systemApi: SystemAPI = {
+    getVersion: () => '1.0.0-alpha',
+    getPlatform: () => 'web',
+    requestPermission: async (permission: ExtensionPermission) => {
+      // TODO: Show permission dialog
+      return true;
     }
   };
 
   const api: TenchatAPI = {
     window: windowApi,
     messaging: messagingApi,
+    ui: uiApi,
+    storage: storageApi,
+    user: userApi,
+    ai: aiApi,
     system: systemApi
   };
 
@@ -101,7 +174,7 @@ export function KernelProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <KernelContext.Provider value={{ api, installExtension, extensions }}>
+    <KernelContext.Provider value={{ api, installExtension, extensions, registeredWidgets }}>
       {children}
     </KernelContext.Provider>
   );

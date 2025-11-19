@@ -23,18 +23,62 @@ export type ExtensionPermission =
   | 'system:notification';
 
 export interface TenchatAPI {
+  // User Space APIs (Exposed to Extensions)
   window: WindowAPI;
   messaging: MessagingAPI;
+  ui: UIAPI;
+  storage: StorageAPI;
+  user: UserAPI;
+  ai: AIAPI;
+  
+  // System Space APIs (Restricted/Read-only for extensions)
   system: SystemAPI;
 }
 
 export interface WindowAPI {
-  open: (config: WindowConfig) => Promise<string>; // Returns window ID
+  open: (config: WindowConfig) => Promise<string>;
   close: (id: string) => Promise<void>;
   minimize: (id: string) => Promise<void>;
   maximize: (id: string) => Promise<void>;
-  blur: (id: string, amount: number) => Promise<void>; // Visual effect
-  lock: (id: string) => Promise<void>; // Biometric lock
+  blur: (id: string, amount: number) => Promise<void>;
+  lock: (id: string) => Promise<void>;
+  // Future: screenshot, record, etc.
+}
+
+export interface UIAPI {
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  registerWidget: (slot: ExtensionSlot, component: ReactNode) => void;
+  registerMenuItem: (location: 'context-menu' | 'sidebar' | 'settings', label: string, action: () => void) => void;
+}
+
+export type ExtensionSlot = 
+  | 'chat_header_action' 
+  | 'chat_input_action' 
+  | 'sidebar_panel' 
+  | 'window_titlebar';
+
+export interface StorageAPI {
+  get: <T>(key: string) => Promise<T | null>;
+  set: <T>(key: string, value: T) => Promise<void>;
+  remove: (key: string) => Promise<void>;
+}
+
+export interface UserAPI {
+  getCurrentUser: () => Promise<{ id: string; name: string } | null>;
+  // No sensitive data like keys exposed here
+}
+
+export interface AIAPI {
+  summarize: (text: string) => Promise<string>;
+  suggestReply: (context: string[]) => Promise<string[]>;
+}
+
+export interface SystemAPI {
+  // Read-only system info
+  getVersion: () => string;
+  getPlatform: () => string;
+  // Restricted actions (might require user approval prompt in future)
+  requestPermission: (permission: ExtensionPermission) => Promise<boolean>;
 }
 
 export interface WindowConfig {
@@ -50,7 +94,7 @@ export interface WindowConfig {
 
 export interface MessagingAPI {
   send: (content: string, recipient: string) => Promise<void>;
-  onReceive: (callback: (msg: any) => void) => () => void; // Returns unsubscribe
+  onReceive: (callback: (msg: unknown) => void) => () => void; // Returns unsubscribe
 }
 
 export interface SystemAPI {

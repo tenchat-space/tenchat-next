@@ -27,6 +27,7 @@ import {
 import { Conversation, useMessages } from "@/hooks/useMessaging";
 import { storageService } from "@/lib/appwrite/services/storage.service";
 import { BUCKET_IDS } from "@/lib/appwrite/config/constants";
+import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRenderer";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -126,6 +127,9 @@ export function ChatWindow({
           </Stack>
           
           <Stack direction="row" spacing={1}>
+            {/* Extension Slot: Header Actions */}
+            <ExtensionSlotRenderer slot="chat_header_action" direction="row" />
+
             {conversation && isAuthenticated && (
               <>
                 <Tooltip title="Voice Call">
@@ -258,6 +262,10 @@ export function ChatWindow({
               onChange={handleFileUpload}
               accept="image/*"
             />
+            
+            {/* Extension Slot: Input Actions */}
+            <ExtensionSlotRenderer slot="chat_input_action" direction="row" />
+
             <IconButton 
               color="secondary" 
               disabled={!conversation || isUploading}
