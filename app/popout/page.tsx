@@ -2,7 +2,7 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { TenchatThemeProvider } from '@/components/providers/TenchatThemeProvider';
 
@@ -12,9 +12,35 @@ import { CallWindow } from '@/components/window/CallWindow';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
 // Import other components as needed
 
+interface PopoutState {
+  id?: string;
+  title?: string;
+  type?: string;
+  props?: Record<string, unknown>;
+}
+
 function PopoutContent() {
   const searchParams = useSearchParams();
   const [component, setComponent] = useState<React.ReactNode>(null);
+  const [popoutState, setPopoutState] = useState<PopoutState | null>(null);
+  const channelRef = useRef<BroadcastChannel | null>(null);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    channelRef.current = new BroadcastChannel('tenchat-popout');
+    return () => {
+      channelRef.current?.close();
+      channelRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (channelRef.current && popoutState?.id) {
+        channelRef.current.postMessage({ type: 'popout-closed', windowId: popoutState.id });
+      }
+    };
+  }, [popoutState?.id]);
 
   useEffect(() => {
     const stateStr = searchParams.get('state');
@@ -39,7 +65,10 @@ function PopoutContent() {
         // Use a timeout to break the synchronous update cycle if needed, 
         // or just accept it's an initialization effect.
         // For strict mode compliance:
-        setTimeout(() => setComponent(comp), 0);
+        setTimeout(() => {
+          setComponent(comp);
+          setPopoutState(state);
+        }, 0);
         
         // Set title
         document.title = state.title || 'TenChat Window';

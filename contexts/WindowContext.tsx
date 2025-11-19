@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { WindowContextType, WindowInstance, WindowTab } from '@/types/window';
 
 const WindowContext = createContext<WindowContextType | undefined>(undefined);
@@ -9,6 +9,22 @@ export function WindowProvider({ children }: { children: ReactNode }) {
   const [windows, setWindows] = useState<WindowInstance[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [nextZIndex, setNextZIndex] = useState(1000);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel('tenchat-popout');
+    const handleMessage = (event: MessageEvent) => {
+      const { type, windowId } = event.data || {};
+      if (type === 'popout-closed' && windowId) {
+        setWindows(prev => prev.map(w => w.id === windowId ? { ...w, isPoppedOut: false } : w));
+      }
+    };
+    channel.addEventListener('message', handleMessage);
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+    };
+  }, []);
 
   const focusWindow = useCallback((id: string) => {
     setActiveWindowId(id);
@@ -121,6 +137,7 @@ export function WindowProvider({ children }: { children: ReactNode }) {
 
       // Serialize state
       const state = encodeURIComponent(JSON.stringify({
+        id: windowInstance.id,
         title: windowInstance.tabs[0].title,
         type: windowInstance.tabs[0].type,
         props: windowInstance.tabs[0].props
