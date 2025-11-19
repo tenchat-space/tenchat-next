@@ -8,6 +8,7 @@ import { useWindow } from '@/contexts/WindowContext';
 import { useDraggable, useResizable } from '@/hooks/useWindowInteraction';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
+import { PerformanceWidget } from '@/components/performance/PerformanceWidget';
 import { motion } from 'framer-motion';
 import { useWindowAnimation } from '@/hooks/useMotionConfig';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
@@ -27,6 +28,7 @@ const DefaultContentRegistry: Record<WindowContentType, React.ComponentType<Reco
   PROFILE: () => <Box p={2}>Profile content</Box>,
   SETTINGS: () => <Box p={2}>Settings content</Box>,
   CUSTOM: () => <Box p={2}>Custom content</Box>,
+  PERFORMANCE: () => <PerformanceWidget />,
 };
 
 const fallbackContent = (type: WindowContentType, props?: Record<string, unknown>) => {

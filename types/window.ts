@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type WindowContentType = 'CHAT' | 'CALL' | 'PROFILE' | 'SETTINGS' | 'CUSTOM';
+export type WindowContentType = 'CHAT' | 'CALL' | 'PROFILE' | 'SETTINGS' | 'CUSTOM' | 'PERFORMANCE';
 
 export interface WindowTab {
   id: string;

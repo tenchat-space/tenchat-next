@@ -36,6 +36,8 @@ import { useAnimationContext } from '@/contexts/AnimationContext';
 import { AnimationLevel, AnimationStyle } from '@/types/animation';
 import { useStyle } from '@/contexts/StyleContext';
 import { BorderRadius, DepthLevel, BlurLevel, BorderStyle } from '@/types/style';
+import { usePerformance } from '@/contexts/PerformanceContext';
+import { PerformanceMode } from '@/types/performance';
 import { ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Slider } from '@mui/material';
 
 interface SettingsDialogProps {
@@ -75,6 +77,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
   const [activeTab, setActiveTab] = useState(0);
   const { level, setLevel, style, setStyle } = useAnimationContext();
   const { styleConfig, updateStyle } = useStyle();
+  const { mode, setMode } = usePerformance();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -103,6 +106,10 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
 
   const handleBlurChange = (event: React.MouseEvent<HTMLElement>, newBlur: BlurLevel | null) => {
     if (newBlur !== null) updateStyle({ blur: newBlur });
+  };
+
+  const handleModeChange = (event: React.MouseEvent<HTMLElement>, newMode: PerformanceMode | null) => {
+    if (newMode !== null) setMode(newMode);
   };
 
   return (
@@ -314,6 +321,28 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                  </ListItemSecondaryAction>
                </ListItem>
              </List>
+
+             <Divider sx={{ my: 2 }} />
+             
+             <Typography variant="h6" gutterBottom>Performance Mode</Typography>
+             <Typography variant="body2" color="text.secondary" gutterBottom>
+               Control resource usage and visual fidelity.
+             </Typography>
+             
+             <ToggleButtonGroup
+                value={mode}
+                exclusive
+                onChange={handleModeChange}
+                aria-label="performance mode"
+                fullWidth
+                color="secondary"
+                sx={{ mt: 1, mb: 3 }}
+              >
+                <ToggleButton value="low">Low</ToggleButton>
+                <ToggleButton value="medium">Medium</ToggleButton>
+                <ToggleButton value="high">High</ToggleButton>
+                <ToggleButton value="dynamic">Dynamic</ToggleButton>
+              </ToggleButtonGroup>
 
              <Divider sx={{ my: 2 }} />
              

@@ -37,7 +37,11 @@ export default function RootLayout({
             <AnimationProvider>
               <AppwriteProvider>
                 <ContextMenuProvider>
-                  <WindowSystem>{children}</WindowSystem>
+                  <PerformanceProvider>
+                    <WindowSystem>
+                      {children}
+                    </WindowSystem>
+                  </PerformanceProvider>
                 </ContextMenuProvider>
               </AppwriteProvider>
             </AnimationProvider>
