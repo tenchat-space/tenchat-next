@@ -8,6 +8,10 @@ import { useWindow } from '@/contexts/WindowContext';
 import { useDraggable, useResizable } from '@/hooks/useWindowInteraction';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
+import { motion } from 'framer-motion';
+import { useWindowAnimation } from '@/hooks/useMotionConfig';
+
+const MotionPaper = motion(Paper);
 
 const DefaultContentRegistry: Record<WindowContentType, React.ComponentType<Record<string, unknown>>> = {
   CHAT: (props) => {
@@ -33,6 +37,7 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
   const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindow();
   const theme = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
+  const variants = useWindowAnimation();
 
   const { position, handleMouseDown: handleDragStart, isDragging } = useDraggable(
     windowRef,
@@ -53,11 +58,16 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
 
   const content = activeTab.component ?? fallbackContent(activeTab.type, activeTab.props);
 
-  if (win.isMinimized || win.isPoppedOut) return null;
-
+  // We don't return null here for minimized/popped out because WindowContainer filters them
+  // and AnimatePresence needs the component to exist to animate it out.
+  
   return (
-    <Paper
+    <MotionPaper
       ref={windowRef}
+      variants={variants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       elevation={8}
       sx={{
         position: 'fixed',
@@ -71,7 +81,13 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
         overflow: 'hidden',
         borderRadius: win.isMaximized ? 0 : 2,
         border: win.isMaximized ? 'none' : `1px solid ${theme.palette.divider}`,
-        transition: isDragging || isResizing ? 'none' : 'all 0.2s ease-out',
+        // Remove transition for position/size if we are dragging/resizing, 
+        // but we might want to keep it for the entrance/exit animation?
+        // Framer motion handles the entrance/exit via variants.
+        // The 'transition' in sx might conflict with framer motion's transform animations?
+        // Framer motion uses transform. sx uses left/top/width/height.
+        // So they should be orthogonal.
+        transition: isDragging || isResizing ? 'none' : 'box-shadow 0.2s, border-color 0.2s', 
         pointerEvents: 'auto',
       }}
       onMouseDown={() => focusWindow(win.id)}
@@ -149,6 +165,6 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
           />
         )}
       </Box>
-    </Paper>
+    </MotionPaper>
   );
 }

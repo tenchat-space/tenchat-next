@@ -2,12 +2,15 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { useWindow } from '@/contexts/WindowContext';
 import { VirtualWindow } from './VirtualWindow';
+import { AnimatePresence } from 'framer-motion';
 
 export function WindowContainer() {
   const { windows } = useWindow();
 
-  if (windows.length === 0) return null;
-
+  // We always render the container so AnimatePresence can work even when the last window closes
+  // But we can return null if no windows AND no exiting windows? 
+  // AnimatePresence handles the exit, so we just render it.
+  
   return (
     <Box
       sx={{
@@ -20,9 +23,11 @@ export function WindowContainer() {
         zIndex: 1300, // Above sidebar and other UI
       }}
     >
-      {windows.map(win => (
-        <VirtualWindow key={win.id} window={win} />
-      ))}
+      <AnimatePresence mode="popLayout">
+        {windows.filter(w => !w.isMinimized && !w.isPoppedOut).map(win => (
+          <VirtualWindow key={win.id} window={win} />
+        ))}
+      </AnimatePresence>
     </Box>
   );
 }

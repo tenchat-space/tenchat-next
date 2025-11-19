@@ -33,8 +33,8 @@ import {
 } from '@mui/icons-material';
 import { Models } from 'appwrite';
 import { useAnimationContext } from '@/contexts/AnimationContext';
-import { AnimationLevel } from '@/types/animation';
-import { ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { AnimationLevel, AnimationStyle } from '@/types/animation';
+import { ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -71,7 +71,7 @@ function TabPanel(props: TabPanelProps) {
 
 export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState(0);
-  const { level, setLevel } = useAnimationContext();
+  const { level, setLevel, style, setStyle } = useAnimationContext();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -84,6 +84,10 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
     if (newLevel !== null) {
       setLevel(newLevel);
     }
+  };
+
+  const handleStyleChange = (event: SelectChangeEvent<AnimationStyle>) => {
+    setStyle(event.target.value as AnimationStyle);
   };
 
   return (
@@ -310,13 +314,28 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                 aria-label="animation intensity"
                 fullWidth
                 color="secondary"
-                sx={{ mt: 1, mb: 2 }}
+                sx={{ mt: 1, mb: 3 }}
               >
                 <ToggleButton value="none">None</ToggleButton>
                 <ToggleButton value="low">Low</ToggleButton>
                 <ToggleButton value="mid">Mid</ToggleButton>
                 <ToggleButton value="high">High</ToggleButton>
               </ToggleButtonGroup>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="animation-style-label">Animation Style</InputLabel>
+                <Select
+                  labelId="animation-style-label"
+                  value={style}
+                  label="Animation Style"
+                  onChange={handleStyleChange}
+                >
+                  <MenuItem value="genie">Genie Effect</MenuItem>
+                  <MenuItem value="scale">Scale & Fade</MenuItem>
+                  <MenuItem value="slide">Slide Up</MenuItem>
+                  <MenuItem value="fade">Simple Fade</MenuItem>
+                </Select>
+              </FormControl>
           </TabPanel>
 
           {/* Notifications Tab */}

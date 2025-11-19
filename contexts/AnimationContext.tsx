@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AnimationLevel, AnimationConfig, ANIMATION_LEVELS, AnimationContextType } from '@/types/animation';
+import { AnimationLevel, AnimationStyle, AnimationConfig, ANIMATION_LEVELS, AnimationContextType } from '@/types/animation';
 
 const AnimationContext = createContext<AnimationContextType | undefined>(undefined);
 
 export function AnimationProvider({ children }: { children: ReactNode }) {
-  const [level, setLevel] = useState<AnimationLevel>('mid');
+  const [level, setLevel] = useState<AnimationLevel>('high');
+  const [style, setStyle] = useState<AnimationStyle>('genie');
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -16,9 +17,15 @@ export function AnimationProvider({ children }: { children: ReactNode }) {
     // Use setTimeout to avoid synchronous setState warning
     setTimeout(() => {
         setPrefersReducedMotion(mediaQuery.matches);
-        const saved = localStorage.getItem('tenchat-animation-level');
-        if (saved && Object.keys(ANIMATION_LEVELS).includes(saved)) {
-            setLevel(saved as AnimationLevel);
+        
+        const savedLevel = localStorage.getItem('tenchat-animation-level');
+        if (savedLevel && Object.keys(ANIMATION_LEVELS).includes(savedLevel)) {
+            setLevel(savedLevel as AnimationLevel);
+        }
+
+        const savedStyle = localStorage.getItem('tenchat-animation-style');
+        if (savedStyle && ['genie', 'scale', 'slide', 'fade'].includes(savedStyle)) {
+            setStyle(savedStyle as AnimationStyle);
         }
     }, 0);
 
@@ -35,6 +42,11 @@ export function AnimationProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('tenchat-animation-level', newLevel);
   };
 
+  const handleSetStyle = (newStyle: AnimationStyle) => {
+    setStyle(newStyle);
+    localStorage.setItem('tenchat-animation-style', newStyle);
+  };
+
   // If system prefers reduced motion, force 'none' or 'low' unless explicitly overridden?
   // For now, we'll respect the user setting but default to 'none' if they haven't set one and system says reduce.
   // But here we just use the state. The hook can handle the "effective" config.
@@ -47,6 +59,8 @@ export function AnimationProvider({ children }: { children: ReactNode }) {
       value={{
         level,
         setLevel: handleSetLevel,
+        style,
+        setStyle: handleSetStyle,
         config,
         isEnabled: effectiveLevel !== 'none',
       }}
