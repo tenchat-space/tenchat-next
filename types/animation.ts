@@ -1,4 +1,5 @@
 export type AnimationLevel = 'none' | 'low' | 'mid' | 'high';
+export type AnimationStyle = 'genie' | 'scale' | 'slide' | 'fade';
 
 export interface AnimationConfig {
   duration: number;
@@ -12,6 +13,8 @@ export interface AnimationConfig {
 export interface AnimationContextType {
   level: AnimationLevel;
   setLevel: (level: AnimationLevel) => void;
+  style: AnimationStyle;
+  setStyle: (style: AnimationStyle) => void;
   config: AnimationConfig;
   isEnabled: boolean;
 }
