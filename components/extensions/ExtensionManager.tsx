@@ -1,12 +1,41 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, Paper, Stack, TextField } from '@mui/material';
+import { Box, Button, Typography, Paper, Stack, TextField, Chip } from '@mui/material';
 import { useKernel } from '@/contexts/KernelContext';
 import { useWindow } from '@/contexts/WindowContext';
+import { ExtensionManifest } from '@/types/extension';
 
 export function ExtensionManager() {
   const { api, installExtension, extensions } = useKernel();
   const { windows } = useWindow();
   const [targetWindowId, setTargetWindowId] = useState<string>('');
+
+  // Demo: Install a sample extension that adds a button to the chat header
+  const installDemoExtension = () => {
+    const manifest: ExtensionManifest = {
+      id: 'demo-ext-1',
+      name: 'Quick Actions',
+      version: '1.0.0',
+      description: 'Adds a quick action button to chat header',
+      author: 'Tenchat Team',
+      permissions: ['window:create']
+    };
+
+    // In a real scenario, the component would be loaded dynamically.
+    // Here we simulate the registration effect.
+    api.ui.registerWidget('chat_header_action', (
+      <Button 
+        key="demo-btn" 
+        variant="contained" 
+        color="success" 
+        size="small"
+        onClick={() => api.ui.showToast('Action from Extension!', 'success')}
+      >
+        Ext Action
+      </Button>
+    ));
+
+    installExtension(manifest, '');
+  };
 
   const handleBlur = () => {
     if (targetWindowId) {
@@ -67,6 +96,11 @@ export function ExtensionManager() {
       </Stack>
 
       <Typography variant="subtitle2" gutterBottom>Installed Extensions</Typography>
+      
+      <Button variant="outlined" onClick={installDemoExtension} sx={{ mb: 2 }}>
+        Install Demo Extension (Adds Widget)
+      </Button>
+
       {extensions.length === 0 ? (
         <Typography variant="body2" color="text.secondary">No extensions installed.</Typography>
       ) : (
