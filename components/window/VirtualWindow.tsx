@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useRef } from 'react';
-import { Box, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Paper, Stack, Typography, MenuItem } from '@mui/material';
 import { Close, CropSquare, Minimize, OpenInNew, Lock } from '@mui/icons-material';
 import { WindowInstance, WindowContentType } from '@/types/window';
 import { useWindow } from '@/contexts/WindowContext';
+import { useContextMenu } from '@/contexts/ContextMenuContext';
 import { useDraggable, useResizable } from '@/hooks/useWindowInteraction';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
@@ -40,7 +41,8 @@ const fallbackContent = (type: WindowContentType, props?: Record<string, unknown
 };
 
 export function VirtualWindow({ window: win }: { window: WindowInstance }) {
-  const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindow();
+  const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, maximizeWindow, restoreWindow, popOutWindow } = useWindow();
+  const { showMenu, hideMenu } = useContextMenu();
   const windowRef = useRef<HTMLDivElement>(null);
   const variants = useWindowAnimation();
   const feedback = useVisualFeedback();
@@ -104,6 +106,16 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
       <Box
         className="window-drag-handle"
         onMouseDown={handleDragStart}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          showMenu(event.clientX, event.clientY, (
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: 1, boxShadow: 3, minWidth: 180 }} onClick={(click) => click.stopPropagation()}>
+              <MenuItem onClick={() => { hideMenu(); popOutWindow(win.id); }}>Open in real window</MenuItem>
+              <MenuItem onClick={() => hideMenu()}>Cancel</MenuItem>
+            </Box>
+          ));
+        }}
         sx={{
           height: 40,
           bgcolor: 'background.default',
