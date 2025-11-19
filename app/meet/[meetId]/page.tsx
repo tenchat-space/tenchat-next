@@ -1,62 +1,93 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Box, IconButton, Stack } from '@mui/material';
+import { useEffect, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Box, IconButton, Stack, Typography, CircularProgress, Button } from '@mui/material';
 import { Mic, MicOff, Videocam, VideocamOff, CallEnd } from '@mui/icons-material';
-import { meetingService } from '@/services/meeting.service';
+import { useMeeting } from '@/hooks/useMeeting';
 
 export default function MeetingPage() {
   const { meetId } = useParams();
-  const [joined, setJoined] = useState(false);
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
+  const router = useRouter();
+  const { 
+    state, 
+    error, 
+    localStream, 
+    remoteStream, 
+    isMicOn, 
+    isCamOn, 
+    join, 
+    leave, 
+    toggleMic, 
+    toggleCam 
+  } = useMeeting(meetId as string);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (meetId && !joined) {
-      meetingService.joinMeeting(meetId as string).then(() => {
-        setJoined(true);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = meetingService.getLocalStream();
-        }
-        // Poll for remote stream (simple hack for MVP)
-        const interval = setInterval(() => {
-          const remote = meetingService.getRemoteStream();
-          if (remote && remoteVideoRef.current && remoteVideoRef.current.srcObject !== remote) {
-            remoteVideoRef.current.srcObject = remote;
-            clearInterval(interval);
-          }
-        }, 1000);
-      });
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
     }
-    return () => {
-      meetingService.leave();
-    };
-  }, [meetId, joined]);
+  }, [localStream]);
 
-  const toggleMic = () => {
-    meetingService.toggleAudio(!micOn);
-    setMicOn(!micOn);
-  };
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
-  const toggleCam = () => {
-    meetingService.toggleVideo(!camOn);
-    setCamOn(!camOn);
-  };
+  if (state === 'idle' || state === 'connecting') {
+    return (
+      <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'black', color: 'white' }}>
+        {state === 'connecting' ? (
+          <>
+            <CircularProgress color="primary" />
+            <Typography sx={{ mt: 2 }}>Connecting to secure channel...</Typography>
+          </>
+        ) : (
+          <Stack spacing={3} alignItems="center">
+            <Typography variant="h4">Ready to join?</Typography>
+            <Button variant="contained" size="large" onClick={join}>
+              Join Meeting
+            </Button>
+            <Button variant="text" color="error" onClick={() => router.back()}>
+              Cancel
+            </Button>
+          </Stack>
+        )}
+      </Box>
+    );
+  }
+
+  if (state === 'failed') {
+    return (
+      <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'black', color: 'white' }}>
+        <Typography color="error" variant="h5" gutterBottom>Connection Failed</Typography>
+        <Typography>{error}</Typography>
+        <Button sx={{ mt: 2 }} variant="outlined" onClick={() => router.back()}>
+          Go Back
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ height: '100vh', bgcolor: 'black', position: 'relative', overflow: 'hidden' }}>
       {/* Remote Video (Full Screen) */}
-      <video
-        ref={remoteVideoRef}
-        autoPlay
-        playsInline
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
+      {remoteStream ? (
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography color="text.secondary">Waiting for others to join...</Typography>
+        </Box>
+      )}
       
       {/* Local Video (PIP) */}
       <Box sx={{ 
@@ -68,15 +99,21 @@ export default function MeetingPage() {
         bgcolor: '#333',
         borderRadius: 2,
         overflow: 'hidden',
-        boxShadow: 3
+        boxShadow: 3,
+        border: '1px solid rgba(255,255,255,0.1)'
       }}>
         <video
           ref={localVideoRef}
           autoPlay
           playsInline
           muted
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
         />
+        {!isCamOn && (
+          <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#222' }}>
+            <VideocamOff sx={{ color: 'text.secondary' }} />
+          </Box>
+        )}
       </Box>
 
       {/* Controls */}
@@ -85,18 +122,20 @@ export default function MeetingPage() {
         bottom: 40, 
         left: '50%', 
         transform: 'translateX(-50%)',
-        bgcolor: 'rgba(0,0,0,0.6)',
-        borderRadius: 4,
-        p: 2
+        bgcolor: 'rgba(20,20,20,0.8)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: 8,
+        p: 2,
+        border: '1px solid rgba(255,255,255,0.1)'
       }}>
         <Stack direction="row" spacing={2}>
-          <IconButton onClick={toggleMic} color={micOn ? 'primary' : 'error'}>
-            {micOn ? <Mic /> : <MicOff />}
+          <IconButton onClick={toggleMic} sx={{ bgcolor: isMicOn ? 'rgba(255,255,255,0.1)' : 'error.main', '&:hover': { bgcolor: isMicOn ? 'rgba(255,255,255,0.2)' : 'error.dark' } }}>
+            {isMicOn ? <Mic /> : <MicOff />}
           </IconButton>
-          <IconButton onClick={toggleCam} color={camOn ? 'primary' : 'error'}>
-            {camOn ? <Videocam /> : <VideocamOff />}
+          <IconButton onClick={toggleCam} sx={{ bgcolor: isCamOn ? 'rgba(255,255,255,0.1)' : 'error.main', '&:hover': { bgcolor: isCamOn ? 'rgba(255,255,255,0.2)' : 'error.dark' } }}>
+            {isCamOn ? <Videocam /> : <VideocamOff />}
           </IconButton>
-          <IconButton color="error" onClick={() => window.close()}>
+          <IconButton color="error" sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }} onClick={() => { leave(); router.back(); }}>
             <CallEnd />
           </IconButton>
         </Stack>

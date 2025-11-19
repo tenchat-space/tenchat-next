@@ -8,10 +8,29 @@ export class MeetingService {
   private remoteStream: MediaStream | null = null;
   private roomId: string | null = null;
   private userId: string;
+  private listeners: Map<string, ((...args: any[]) => void)[]> = new Map();
 
   constructor() {
     this.signaling = new SignalingService();
     this.userId = `user-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  on(event: string, callback: (...args: any[]) => void) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)?.push(callback);
+  }
+
+  off(event: string, callback: (...args: any[]) => void) {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      this.listeners.set(event, callbacks.filter(cb => cb !== callback));
+    }
+  }
+
+  private emit(event: string, ...args: any[]) {
+    this.listeners.get(event)?.forEach(cb => cb(...args));
   }
 
   async joinMeeting(roomId: string, video: boolean = true, audio: boolean = true) {
@@ -82,8 +101,7 @@ export class MeetingService {
 
     this.peerConnection.ontrack = (event) => {
       this.remoteStream = event.streams[0];
-      // Notify UI to update
-      // In a real service, we'd use an event emitter or observable
+      this.emit('remote-stream', this.remoteStream);
     };
   }
 
