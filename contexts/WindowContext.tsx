@@ -116,10 +116,35 @@ export function WindowProvider({ children }: { children: ReactNode }) {
   }, [focusWindow]);
 
   const popOutWindow = useCallback((id: string) => {
-      // Placeholder for pop-out logic
-      console.log("Pop out window", id);
-      setWindows(prev => prev.map(w => w.id === id ? { ...w, isPoppedOut: true } : w));
-  }, []);
+      const windowInstance = windows.find(w => w.id === id);
+      if (!windowInstance) return;
+
+      // Serialize state
+      const state = encodeURIComponent(JSON.stringify({
+        title: windowInstance.tabs[0].title,
+        type: windowInstance.tabs[0].type,
+        props: windowInstance.tabs[0].props
+      }));
+
+      // Open real window
+      const width = windowInstance.size.width;
+      const height = windowInstance.size.height;
+      const left = window.screenX + windowInstance.position.x;
+      const top = window.screenY + windowInstance.position.y;
+
+      const popup = window.open(
+        `/popout?state=${state}`, 
+        id, 
+        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+      );
+
+      if (popup) {
+        // Mark as popped out in state (hides it from virtual desktop but keeps it alive in logic if needed)
+        setWindows(prev => prev.map(w => w.id === id ? { ...w, isPoppedOut: true } : w));
+        
+        // Optional: Setup BroadcastChannel for bi-directional sync
+      }
+  }, [windows]);
 
   const setWindowBlur = useCallback((id: string, blurred: boolean, amount: number = 10) => {
     setWindows(prev => prev.map(w => w.id === id ? { ...w, isBlurred: blurred, blurAmount: amount } : w));
