@@ -32,6 +32,9 @@ import {
   AccountBalanceWallet
 } from '@mui/icons-material';
 import { Models } from 'appwrite';
+import { useAnimationContext } from '@/contexts/AnimationContext';
+import { AnimationLevel } from '@/types/animation';
+import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -68,9 +71,19 @@ function TabPanel(props: TabPanelProps) {
 
 export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState(0);
+  const { level, setLevel } = useAnimationContext();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+  };
+
+  const handleAnimationChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newLevel: AnimationLevel | null,
+  ) => {
+    if (newLevel !== null) {
+      setLevel(newLevel);
+    }
   };
 
   return (
@@ -281,13 +294,29 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
                    <Switch defaultChecked color="secondary" />
                  </ListItemSecondaryAction>
                </ListItem>
-               <ListItem>
-                 <ListItemText primary="Reduce Motion" />
-                 <ListItemSecondaryAction>
-                   <Switch color="secondary" />
-                 </ListItemSecondaryAction>
-               </ListItem>
              </List>
+
+             <Divider sx={{ my: 2 }} />
+             
+             <Typography variant="h6" gutterBottom>Animations</Typography>
+             <Typography variant="body2" color="text.secondary" gutterBottom>
+               Adjust the intensity of interface animations.
+             </Typography>
+             
+             <ToggleButtonGroup
+                value={level}
+                exclusive
+                onChange={handleAnimationChange}
+                aria-label="animation intensity"
+                fullWidth
+                color="secondary"
+                sx={{ mt: 1, mb: 2 }}
+              >
+                <ToggleButton value="none">None</ToggleButton>
+                <ToggleButton value="low">Low</ToggleButton>
+                <ToggleButton value="mid">Mid</ToggleButton>
+                <ToggleButton value="high">High</ToggleButton>
+              </ToggleButtonGroup>
           </TabPanel>
 
           {/* Notifications Tab */}

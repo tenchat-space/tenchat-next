@@ -12,12 +12,15 @@ export function AnimationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Initialize client-side values
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const saved = localStorage.getItem('tenchat-animation-level');
-    if (saved && Object.keys(ANIMATION_LEVELS).includes(saved)) {
-      setLevel(saved as AnimationLevel);
-    }
+    
+    // Use setTimeout to avoid synchronous setState warning
+    setTimeout(() => {
+        setPrefersReducedMotion(mediaQuery.matches);
+        const saved = localStorage.getItem('tenchat-animation-level');
+        if (saved && Object.keys(ANIMATION_LEVELS).includes(saved)) {
+            setLevel(saved as AnimationLevel);
+        }
+    }, 0);
 
     const handleChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
