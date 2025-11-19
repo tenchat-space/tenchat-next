@@ -7,6 +7,7 @@ import {
   WalletOutlined,
 } from "@mui/icons-material";
 import { Avatar, Box, IconButton, Paper, Stack, Tooltip } from "@mui/material";
+import { useTheme, alpha } from '@mui/material/styles';
 
 interface SidebarItem {
   id: string;
@@ -35,6 +36,8 @@ export function BottomNav({
   activeRightId,
   setActiveRightId,
 }: BottomNavProps) {
+  const theme = useTheme();
+
   const renderItem = (item: SidebarItem, isActive: boolean, onClick: () => void) => (
     <Tooltip key={item.id} title={item.label} placement="top" arrow>
       <IconButton
@@ -42,9 +45,9 @@ export function BottomNav({
         size="medium"
         sx={{
           color: isActive ? "primary.main" : "text.secondary",
-          bgcolor: isActive ? "rgba(139, 92, 246, 0.15)" : "transparent",
+          bgcolor: isActive ? alpha(theme.palette.primary.main, 0.15) : "transparent",
           "&:hover": {
-            bgcolor: "rgba(139, 92, 246, 0.08)",
+            bgcolor: alpha(theme.palette.primary.main, 0.08),
             color: "primary.light",
             transform: "translateY(-2px)",
           },
@@ -74,10 +77,11 @@ export function BottomNav({
         sx={{
           borderRadius: 4,
           p: 1,
-          bgcolor: "rgba(15, 15, 20, 0.85)",
+          bgcolor: alpha(theme.palette.background.paper, 0.85),
           backdropFilter: "blur(20px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+          border: "1px solid",
+          borderColor: alpha(theme.palette.divider, 0.1),
+          boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.4)}`,
         }}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="center">

@@ -18,6 +18,7 @@ import {
   VerifiedUserOutlined,
 } from "@mui/icons-material";
 import { Models } from "appwrite";
+import { useTheme, alpha } from '@mui/material/styles';
 
 interface ProfilePanelProps {
   currentAccount: Models.User<Models.Preferences> | null;
@@ -26,6 +27,8 @@ interface ProfilePanelProps {
 }
 
 export function ProfilePanel({ currentAccount, logout, onOpenSettings }: ProfilePanelProps) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
@@ -38,7 +41,7 @@ export function ProfilePanel({ currentAccount, logout, onOpenSettings }: Profile
         flexDirection: "column",
         gap: 3,
         backgroundImage:
-          "linear-gradient(120deg, rgba(250,204,21,0.1), rgba(124,58,237,0.05))",
+          `linear-gradient(120deg, ${alpha(theme.palette.secondary.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.05)})`,
         overflowY: "auto",
       }}
     >
@@ -103,7 +106,7 @@ export function ProfilePanel({ currentAccount, logout, onOpenSettings }: Profile
           </Typography>
           <VerifiedUserOutlined fontSize="small" color="success" />
         </Stack>
-        <Card variant="outlined" sx={{ bgcolor: "rgba(34, 197, 94, 0.05)", borderColor: "rgba(34, 197, 94, 0.2)" }}>
+        <Card variant="outlined" sx={{ bgcolor: alpha(theme.palette.success.main, 0.05), borderColor: alpha(theme.palette.success.main, 0.2) }}>
           <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
              <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
                 <SecurityOutlined fontSize="small" color="success" />

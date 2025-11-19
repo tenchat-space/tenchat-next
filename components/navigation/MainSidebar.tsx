@@ -9,6 +9,7 @@ import {
   WalletOutlined,
 } from "@mui/icons-material";
 import { Avatar, Box, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useTheme, alpha } from '@mui/material/styles';
 
 interface SidebarItem {
   id: string;
@@ -45,6 +46,8 @@ export function MainSidebar({
   activeRightId,
   setActiveRightId,
 }: MainSidebarProps) {
+  const theme = useTheme();
+
   const renderItem = (item: SidebarItem, isActive: boolean, onClick: () => void) => (
     <Tooltip key={item.id} title={item.label} placement="right" arrow>
       <IconButton
@@ -52,9 +55,9 @@ export function MainSidebar({
         size="large"
         sx={{
           color: isActive ? "primary.main" : "text.secondary",
-          bgcolor: isActive ? "rgba(124, 58, 237, 0.15)" : "transparent",
+          bgcolor: isActive ? alpha(theme.palette.primary.main, 0.15) : "transparent",
           "&:hover": {
-            bgcolor: "rgba(124, 58, 237, 0.08)",
+            bgcolor: alpha(theme.palette.primary.main, 0.08),
             color: "primary.light",
           },
           borderRadius: 3,
@@ -79,7 +82,7 @@ export function MainSidebar({
         py: 3,
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundImage: "linear-gradient(180deg, rgba(250,204,21,0.05), transparent)",
+        backgroundImage: `linear-gradient(180deg, ${alpha(theme.palette.secondary.main, 0.05)}, transparent)`,
         zIndex: 1200, // Ensure it's above other layers if needed
       }}
     >
@@ -95,7 +98,7 @@ export function MainSidebar({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 8px 16px rgba(124, 58, 237, 0.4)",
+                boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
                 mb: 1
             }}
         >
@@ -123,7 +126,7 @@ export function MainSidebar({
             renderItem(item, activeRightId === item.id, () => setActiveRightId(item.id))
          )}
          <IconButton onClick={() => setActiveRightId('profile')} sx={{ p: 0, mt: 1 }}>
-             <Avatar sx={{ width: 40, height: 40, border: activeRightId === 'profile' ? '2px solid #facc15' : 'none' }} />
+             <Avatar sx={{ width: 40, height: 40, border: activeRightId === 'profile' ? `2px solid ${theme.palette.secondary.main}` : 'none' }} />
          </IconButton>
       </Stack>
     </Stack>
