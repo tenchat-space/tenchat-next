@@ -31,8 +31,16 @@ export interface TenchatAPI {
   user: UserAPI;
   ai: AIAPI;
   
-  // System Space APIs (Restricted/Read-only for extensions)
-  system: SystemAPI;
+  // System Space APIs (Restricted to Core/Privileged Extensions)
+  system?: SystemAPI;
+  blockchain?: BlockchainAPI;
+}
+
+export interface BlockchainAPI {
+  connect: () => Promise<boolean>;
+  signMessage: (message: string) => Promise<string>;
+  verifyZKProof: (proof: unknown, publicInputs: unknown) => Promise<boolean>;
+  getWalletState: () => Promise<{ address: string; chainId: number }>;
 }
 
 export interface WindowAPI {
@@ -71,14 +79,9 @@ export interface UserAPI {
 export interface AIAPI {
   summarize: (text: string) => Promise<string>;
   suggestReply: (context: string[]) => Promise<string[]>;
-}
-
-export interface SystemAPI {
-  // Read-only system info
-  getVersion: () => string;
-  getPlatform: () => string;
-  // Restricted actions (might require user approval prompt in future)
-  requestPermission: (permission: ExtensionPermission) => Promise<boolean>;
+  // Core only
+  generateCompletion?: (prompt: string, context: unknown) => Promise<string>;
+  analyzeSentiment?: (text: string) => Promise<number>;
 }
 
 export interface WindowConfig {
@@ -98,6 +101,14 @@ export interface MessagingAPI {
 }
 
 export interface SystemAPI {
+  // Read-only system info (Public)
+  getVersion: () => string;
+  getPlatform: () => string;
+  
+  // Restricted actions (Core Only)
+  requestPermission: (permission: ExtensionPermission) => Promise<boolean>;
+  accessKernelMemory?: () => Promise<unknown>;
+  manageExtensions?: () => Promise<void>;
   notify: (msg: string) => void;
 }
 

@@ -12,6 +12,7 @@ import {
   UserAPI,
   AIAPI,
   SystemAPI,
+  BlockchainAPI,
   ExtensionSlot,
   ExtensionPermission,
   MessagingAPI
@@ -25,11 +26,30 @@ interface KernelContextType {
   registeredWidgets: Record<string, ReactNode[]>;
 }
 
+const PRE_INSTALLED_EXTENSIONS: ExtensionManifest[] = [
+  {
+    id: 'ext-core-ai',
+    name: 'TenRizzBot',
+    version: '1.0.0',
+    description: 'Advanced AI assistant with deep system integration.',
+    author: 'TenChat Core',
+    permissions: ['system:notification', 'storage:read', 'storage:write'],
+  },
+  {
+    id: 'ext-core-chain',
+    name: 'TenProtocol Plugin',
+    version: '1.0.0',
+    description: 'Blockchain integration and wallet management.',
+    author: 'TenChat Core',
+    permissions: ['storage:read', 'storage:write'],
+  }
+];
+
 const KernelContext = createContext<KernelContextType | undefined>(undefined);
 
 export function KernelProvider({ children }: { children: ReactNode }) {
   const windowContext = useWindow();
-  const [extensions, setExtensions] = useState<ExtensionManifest[]>([]);
+  const [extensions, setExtensions] = useState<ExtensionManifest[]>(PRE_INSTALLED_EXTENSIONS);
   const [registeredWidgets, setRegisteredWidgets] = useState<Record<string, ReactNode[]>>({});
 
   // 1. Implement the Window API
@@ -131,6 +151,15 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     },
     suggestReply: async (context: string[]) => {
       return ["Sounds good!", "I'll check it out.", "Can we talk later?"];
+    },
+    // Core only methods
+    generateCompletion: async (prompt: string) => {
+      // In a real app, this would call a local LLM or secure backend
+      console.log(`[Core AI] Generating completion for: ${prompt}`);
+      return "This is a secure, zero-knowledge generated response.";
+    },
+    analyzeSentiment: async (text: string) => {
+      return 0.8; // Positive
     }
   };
 
@@ -141,40 +170,98 @@ export function KernelProvider({ children }: { children: ReactNode }) {
     requestPermission: async (permission: ExtensionPermission) => {
       // TODO: Show permission dialog
       return true;
+    },
+    notify: (msg: string) => {
+      console.log(`[System Notification] ${msg}`);
+    },
+    // Core only methods
+    accessKernelMemory: async () => {
+      console.warn("[System] Accessing kernel memory (Restricted)");
+      return { heap: "secure_data" };
+    },
+    manageExtensions: async () => {
+      console.log("[System] Opening extension manager");
     }
   };
 
-  const api: TenchatAPI = {
+  // 8. Implement Blockchain API (Core Only)
+  const blockchainApi: BlockchainAPI = {
+    connect: async () => {
+      console.log("[Blockchain] Connecting wallet...");
+      return true;
+    },
+    signMessage: async (message: string) => {
+      console.log("[Blockchain] Signing message securely");
+      return "0x_signed_hash";
+    },
+    verifyZKProof: async (proof: unknown) => {
+      console.log("[Blockchain] Verifying Zero-Knowledge Proof");
+      return true;
+    },
+    getWalletState: async () => {
+      return { address: "0x123...core", chainId: 1 };
+    }
+  };
+
+  // The full API (for Core use)
+  const coreApi: TenchatAPI = {
     window: windowApi,
     messaging: messagingApi,
     ui: uiApi,
     storage: storageApi,
     user: userApi,
     ai: aiApi,
-    system: systemApi
+    system: systemApi,
+    blockchain: blockchainApi
+  };
+
+  // Helper to get API for a specific extension
+  const getApiForExtension = (manifest: ExtensionManifest): TenchatAPI => {
+    const isCore = manifest.id.startsWith('ext-core-');
+    
+    if (isCore) {
+      return coreApi;
+    }
+
+    // Return restricted API for user extensions
+    return {
+      window: windowApi,
+      messaging: messagingApi,
+      ui: uiApi,
+      storage: storageApi,
+      user: userApi,
+      ai: {
+        summarize: aiApi.summarize,
+        suggestReply: aiApi.suggestReply
+      },
+      // System API is restricted/hidden
+      system: {
+        getVersion: systemApi.getVersion,
+        getPlatform: systemApi.getPlatform,
+        requestPermission: systemApi.requestPermission,
+        notify: systemApi.notify
+      }
+      // No blockchain access
+    };
   };
 
   const installExtension = async (manifest: ExtensionManifest, script: string) => {
     console.log(`Installing extension: ${manifest.name}`);
     setExtensions(prev => [...prev, manifest]);
     
-    // In a real implementation, we would:
-    // 1. Validate permissions
-    // 2. Store script in IndexedDB/LocalStorage
-    // 3. Execute 'onInit' in a sandbox
-    
-    // For now, we just log it.
     try {
-        // Dangerous! Only for demo. Real implementation needs iframe/worker sandbox.
+        // When we execute the extension, we would pass the scoped API:
+        const scopedApi = getApiForExtension(manifest);
+        console.log("Extension installed with API scope:", Object.keys(scopedApi));
         // const func = new Function('api', script);
-        // func(api);
+        // func(scopedApi);
     } catch (e) {
         console.error("Failed to install extension", e);
     }
   };
 
   return (
-    <KernelContext.Provider value={{ api, installExtension, extensions, registeredWidgets }}>
+    <KernelContext.Provider value={{ api: coreApi, installExtension, extensions, registeredWidgets }}>
       {children}
     </KernelContext.Provider>
   );
