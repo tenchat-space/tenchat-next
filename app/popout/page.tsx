@@ -9,6 +9,7 @@ import { TenchatThemeProvider } from '@/components/providers/TenchatThemeProvide
 // Registry of components that can be popped out
 // In a real app, this would be a dynamic registry or lazy loaded
 import { CallWindow } from '@/components/window/CallWindow';
+import { ChatWindow } from '@/components/chat/window/ChatWindow';
 // Import other components as needed
 
 function PopoutContent() {
@@ -26,6 +27,9 @@ function PopoutContent() {
         switch (state.type) {
           case 'CALL':
             comp = <CallWindow {...state.props} />;
+            break;
+          case 'CHAT':
+            comp = <ChatWindow {...state.props} />;
             break;
           // Add other cases
           default:

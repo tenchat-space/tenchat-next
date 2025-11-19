@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { Box, IconButton, Paper, Stack, Typography, MenuItem } from '@mui/material';
-import { Close, CropSquare, Minimize, OpenInNew, Lock } from '@mui/icons-material';
+import { Close, Minimize, OpenInNew, Lock } from '@mui/icons-material';
 import { WindowInstance, WindowContentType } from '@/types/window';
 import { useWindow } from '@/contexts/WindowContext';
 import { useContextMenu } from '@/contexts/ContextMenuContext';
@@ -41,7 +41,7 @@ const fallbackContent = (type: WindowContentType, props?: Record<string, unknown
 };
 
 export function VirtualWindow({ window: win }: { window: WindowInstance }) {
-  const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, maximizeWindow, restoreWindow, popOutWindow } = useWindow();
+  const { focusWindow, moveWindow, resizeWindow, closeWindow, minimizeWindow, popOutWindow } = useWindow();
   const { showMenu, hideMenu } = useContextMenu();
   const windowRef = useRef<HTMLDivElement>(null);
   const variants = useWindowAnimation();
@@ -148,15 +148,11 @@ export function VirtualWindow({ window: win }: { window: WindowInstance }) {
             size="small" 
             onClick={(e) => {
               e.stopPropagation();
-              if (win.isMaximized) {
-                restoreWindow(win.id);
-              } else {
-                maximizeWindow(win.id);
-              }
+              popOutWindow(win.id);
             }}
             {...feedback}
           >
-            {win.isMaximized ? <OpenInNew fontSize="small" sx={{ transform: 'rotate(180deg)' }} /> : <CropSquare fontSize="small" />}
+            <OpenInNew fontSize="small" />
           </MotionIconButton>
           <MotionIconButton 
             size="small" 
