@@ -20,6 +20,7 @@ export interface WindowInstance {
   isMaximized: boolean; // Virtual maximization (fills viewport)
   isPoppedOut: boolean; // Real window pop-out
   zIndex: number;
+  lastInteraction: number;
 }
 
 export interface WindowContextType {

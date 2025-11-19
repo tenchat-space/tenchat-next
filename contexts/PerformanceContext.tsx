@@ -17,7 +17,7 @@ export function PerformanceProvider({ children }: { children: ReactNode }) {
   });
   const [recommendations, setRecommendations] = useState<string[]>([]);
   
-  const { windows, closeWindow } = useWindow();
+  const { windows, closeWindow, activeWindowId } = useWindow();
   const frameCount = useRef(0);
   const lastTime = useRef(0);
   const requestRef = useRef<number>(0);
@@ -131,44 +131,55 @@ export function PerformanceProvider({ children }: { children: ReactNode }) {
 
   const config = getConfig();
 
-  const clearClutter = useCallback(() => {
+  const getSortedWindowsByImportance = useCallback(() => {
+    return [...windows].sort((a, b) => {
+      // 1. Performance Window (Highest Priority)
+      const aIsPerf = a.tabs.some(t => t.type === 'PERFORMANCE');
+      const bIsPerf = b.tabs.some(t => t.type === 'PERFORMANCE');
+      if (aIsPerf && !bIsPerf) return 1;
+      if (!aIsPerf && bIsPerf) return -1;
+
+      // 2. Active Window (High Priority)
+      if (a.id === activeWindowId) return 1;
+      if (b.id === activeWindowId) return -1;
+
+      // 3. Last Interaction (Recent is better)
+      return (a.lastInteraction || 0) - (b.lastInteraction || 0);
+    });
+  }, [windows, activeWindowId]);
+
+  // Enforce limits automatically
+  useEffect(() => {
     const limit = config.maxWindows;
-    const currentCount = windows.length;
+    if (windows.length > limit) {
+      const sorted = getSortedWindowsByImportance();
+      // The start of the array has the least important windows (Oldest interaction, not active, not perf)
+      const toCloseCount = windows.length - limit;
+      const toClose = sorted.slice(0, toCloseCount);
+      
+      // Use a timeout to avoid immediate closing during render cycles or rapid updates
+      const timer = setTimeout(() => {
+        toClose.forEach(w => closeWindow(w.id));
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [windows.length, config.maxWindows, getSortedWindowsByImportance, closeWindow]);
+
+  const clearClutter = useCallback(() => {
+    // Aggressively clean up: Keep only Active + Performance + maybe 1 recent
+    const sorted = getSortedWindowsByImportance();
+    // We want to keep the most important ones.
+    // Let's say we keep max 2 windows (Active + Perf or Active + 1 Recent)
+    const keepCount = 2; 
     
-    // If we are within limits, just close minimized ones as a cleanup action
-    if (currentCount <= limit) {
-        const minimized = windows.filter(w => w.isMinimized);
-        minimized.forEach(w => closeWindow(w.id));
-        return;
-    }
+    if (windows.length <= keepCount) return;
 
-    let windowsToRemove = currentCount - limit;
-    const idsToRemove: Set<string> = new Set();
-
-    // 1. Target minimized windows first
-    const minimized = windows.filter(w => w.isMinimized);
-    for (const w of minimized) {
-        if (windowsToRemove <= 0) break;
-        idsToRemove.add(w.id);
-        windowsToRemove--;
-    }
-
-    // 2. If still need to remove, target oldest windows (assuming index 0 is oldest/bottom)
-    // We avoid closing the active window (usually last) if possible, unless we have to.
-    if (windowsToRemove > 0) {
-        // Filter out already marked ones
-        const candidates = windows.filter(w => !idsToRemove.has(w.id));
-        
-        // Remove from start (oldest)
-        for (const w of candidates) {
-            if (windowsToRemove <= 0) break;
-            idsToRemove.add(w.id);
-            windowsToRemove--;
-        }
-    }
-
-    idsToRemove.forEach(id => closeWindow(id));
-  }, [windows, closeWindow, config.maxWindows]);
+    // We want to close everything except the last 'keepCount' items in the sorted array
+    // (Since sorted is Ascending importance, the end has the most important)
+    const toClose = sorted.slice(0, windows.length - keepCount);
+    
+    toClose.forEach(w => closeWindow(w.id));
+  }, [getSortedWindowsByImportance, windows.length, closeWindow]);
 
   return (
     <PerformanceContext.Provider value={{ mode, setMode, metrics, config, recommendations, clearClutter }}>

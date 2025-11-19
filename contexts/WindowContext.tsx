@@ -14,7 +14,7 @@ export function WindowProvider({ children }: { children: ReactNode }) {
     setActiveWindowId(id);
     setWindows(prev => prev.map(w => {
       if (w.id === id) {
-        return { ...w, zIndex: nextZIndex };
+        return { ...w, zIndex: nextZIndex, lastInteraction: Date.now() };
       }
       return w;
     }));
@@ -54,6 +54,7 @@ export function WindowProvider({ children }: { children: ReactNode }) {
       isMaximized: false,
       isPoppedOut: false,
       zIndex: nextZIndex,
+      lastInteraction: Date.now(),
     };
 
     setWindows(prev => [...prev, newWindow]);

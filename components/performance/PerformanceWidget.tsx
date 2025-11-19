@@ -4,7 +4,7 @@ import { usePerformance } from '@/contexts/PerformanceContext';
 import { Speed, CleaningServices } from '@mui/icons-material';
 
 export function PerformanceWidget() {
-  const { metrics, mode, config, recommendations, clearClutter } = usePerformance();
+  const { metrics, mode, setMode, config, recommendations, clearClutter } = usePerformance();
 
   const getHealthColor = (score: number) => {
     if (score > 80) return 'success.main';
@@ -78,15 +78,54 @@ export function PerformanceWidget() {
         )}
 
         {/* Actions */}
-        <Button 
-          variant="outlined" 
-          color="secondary" 
-          startIcon={<CleaningServices />}
-          onClick={clearClutter}
-          fullWidth
-        >
-          Clear Clutter
-        </Button>
+        <Box>
+            <Typography variant="caption" color="text.secondary" gutterBottom>Quick Actions</Typography>
+            <Stack spacing={1}>
+                <Button 
+                variant="outlined" 
+                color="secondary" 
+                startIcon={<CleaningServices />}
+                onClick={clearClutter}
+                fullWidth
+                size="small"
+                >
+                Clear Clutter
+                </Button>
+                
+                <Stack direction="row" spacing={1}>
+                    <Button 
+                        variant={mode === 'low' ? 'contained' : 'outlined'} 
+                        color="success" 
+                        onClick={() => setMode('low')}
+                        fullWidth
+                        size="small"
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Save Power
+                    </Button>
+                    <Button 
+                        variant={mode === 'high' ? 'contained' : 'outlined'} 
+                        color="error" 
+                        onClick={() => setMode('high')}
+                        fullWidth
+                        size="small"
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Boost
+                    </Button>
+                </Stack>
+                <Button 
+                    variant={mode === 'dynamic' ? 'contained' : 'outlined'} 
+                    color="info" 
+                    onClick={() => setMode('dynamic')}
+                    fullWidth
+                    size="small"
+                    sx={{ textTransform: 'none' }}
+                >
+                    Auto (Dynamic)
+                </Button>
+            </Stack>
+        </Box>
       </Stack>
     </Box>
   );
