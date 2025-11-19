@@ -220,7 +220,11 @@ export function ChatWindow({
                             mb: 1,
                             cursor: 'pointer'
                           }}
-                          onClick={() => window.open(storageService.getFileView(message.metadata.bucketId, message.metadata.fileId), '_blank')}
+                          onClick={() => {
+                            if (message.metadata) {
+                              window.open(storageService.getFileView(message.metadata.bucketId, message.metadata.fileId), '_blank');
+                            }
+                          }}
                         />
                       ) : (
                         <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>

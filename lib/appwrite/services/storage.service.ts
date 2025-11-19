@@ -32,12 +32,12 @@ export class StorageService {
     }
   }
 
-  async getFilePreview(
+  getFilePreview(
     bucketId: string,
     fileId: string,
     width?: number,
     height?: number
-  ): Promise<string> {
+  ): string {
     try {
       return storage.getFilePreview(
         bucketId,
@@ -47,25 +47,25 @@ export class StorageService {
       );
     } catch (error) {
       console.error('Error getting file preview:', error);
-      throw error;
+      return '';
     }
   }
 
-  async getFileView(bucketId: string, fileId: string): Promise<string> {
+  getFileView(bucketId: string, fileId: string): string {
     try {
       return storage.getFileView(bucketId, fileId);
     } catch (error) {
       console.error('Error getting file view:', error);
-      throw error;
+      return '';
     }
   }
 
-  async getFileDownload(bucketId: string, fileId: string): Promise<string> {
+  getFileDownload(bucketId: string, fileId: string): string {
     try {
       return storage.getFileDownload(bucketId, fileId);
     } catch (error) {
       console.error('Error getting file download:', error);
-      throw error;
+      return '';
     }
   }
 
