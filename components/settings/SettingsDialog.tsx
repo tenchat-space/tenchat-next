@@ -38,6 +38,7 @@ import { useStyle } from '@/contexts/StyleContext';
 import { BorderRadius, DepthLevel, BlurLevel, BorderStyle } from '@/types/style';
 import { usePerformance } from '@/contexts/PerformanceContext';
 import { PerformanceMode } from '@/types/performance';
+import { useWindow } from '@/contexts/WindowContext';
 import { ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Slider } from '@mui/material';
 
 interface SettingsDialogProps {
@@ -78,6 +79,7 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
   const { level, setLevel, style, setStyle } = useAnimationContext();
   const { styleConfig, updateStyle } = useStyle();
   const { mode, setMode } = usePerformance();
+  const { openWindow } = useWindow();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -110,6 +112,15 @@ export function SettingsDialog({ open, onClose, currentUser }: SettingsDialogPro
 
   const handleModeChange = (event: React.MouseEvent<HTMLElement>, newMode: PerformanceMode | null) => {
     if (newMode !== null) setMode(newMode);
+  };
+
+  const handleOpenPerformanceWidget = () => {
+    openWindow({
+      title: 'Performance',
+      type: 'PERFORMANCE',
+      component: null,
+    });
+    onClose();
   };
 
   return (
