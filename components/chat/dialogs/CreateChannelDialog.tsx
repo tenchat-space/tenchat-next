@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { chatService } from "@/lib/appwrite";
-import { ConversationsType } from "@/types/appwrite";
+import { ConversationsType } from "@/types/appwrite.d";
 
 interface CreateChannelDialogProps {
   open: boolean;

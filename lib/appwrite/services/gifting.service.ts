@@ -3,7 +3,8 @@
  * Handles gift sending and crypto transfers
  */
 
-import { messagingService } from './messaging.service';
+import { chatService } from './chat';
+import { MessagesContentType } from '@/types/appwrite.d';
 
 export interface Gift {
   id: string;
@@ -115,13 +116,18 @@ export class GiftingService {
       throw new Error('Gift not found');
     }
 
-    await messagingService.sendGift(
+    const giftData = {
+      giftId: gift.id,
+      name: gift.name,
+      value: gift.value,
+      currency: 'GIFT_TOKEN',
+      message: message || `Sent you a ${gift.name} ${gift.emoji}`
+    };
+
+    await chatService.sendMessage(
       conversationId,
-      senderId,
-      gift.name,
-      gift.value,
-      'GIFT_TOKEN',
-      message || `Sent you a ${gift.name} ${gift.emoji}`
+      JSON.stringify(giftData),
+      MessagesContentType.TOKEN_GIFT
     );
   }
 

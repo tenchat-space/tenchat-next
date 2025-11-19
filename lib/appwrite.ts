@@ -19,6 +19,7 @@ export {
   web3Service,
   socialService,
   realtimeService,
+  chatService,
 } from './appwrite/services';
 
 // Export service classes
@@ -31,6 +32,7 @@ export {
   Web3Service,
   SocialService,
   RealtimeService,
+  ChatService,
 } from './appwrite/services';
 
 // Export types

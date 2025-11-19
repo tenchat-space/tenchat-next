@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { chatService, realtimeService } from '@/lib/appwrite';
-import { Conversations, Messages, MessagesContentType } from '@/types/appwrite';
+import { Conversations, Messages, MessagesContentType } from '@/types/appwrite.d';
 
 export type Conversation = Conversations;
 export type ChatMessage = Messages;

@@ -8,7 +8,7 @@ import {
     MessagesContentType, 
     MessagesStatus,
     ConversationsType
-} from '@/types/appwrite';
+} from '@/types/appwrite.d';
 
 const DATABASE_ID = 'chat'; // From appwrite.config.json
 const TABLES = {
@@ -57,12 +57,12 @@ export class ChatService {
         };
 
         // 3. Save to TableDB
-        const result = await tablesDB.createRow(
-            DATABASE_ID,
-            TABLES.MESSAGES,
-            ID.unique(),
-            messageData
-        );
+        const result = await tablesDB.createRow({
+            databaseId: DATABASE_ID,
+            tableId: TABLES.MESSAGES,
+            rowId: ID.unique(),
+            data: messageData
+        });
 
         // 4. Update conversation last message
         await this.updateConversationLastMessage(conversationId, "Encrypted Message", user.$id);
@@ -74,16 +74,16 @@ export class ChatService {
      * Get messages for a conversation and decrypt them.
      */
     async getMessages(conversationId: string, limit = 50, offset = 0): Promise<Messages[]> {
-        const result = await tablesDB.listRows(
-            DATABASE_ID,
-            TABLES.MESSAGES,
-            [
+        const result = await tablesDB.listRows({
+            databaseId: DATABASE_ID,
+            tableId: TABLES.MESSAGES,
+            queries: [
                 Query.equal('conversationId', conversationId),
                 Query.orderDesc('createdAt'),
                 Query.limit(limit),
                 Query.offset(offset)
             ]
-        );
+        });
 
         const messages = result.rows as unknown as Messages[];
 
@@ -146,16 +146,16 @@ export class ChatService {
             avatarUrl: options?.avatarUrl
         };
 
-        const result = await tablesDB.createRow(
-            DATABASE_ID,
-            TABLES.CONVERSATIONS,
-            ID.unique(),
-            conversationData,
-            [
+        const result = await tablesDB.createRow({
+            databaseId: DATABASE_ID,
+            tableId: TABLES.CONVERSATIONS,
+            rowId: ID.unique(),
+            data: conversationData,
+            permissions: [
                 Permission.read(Role.users()), // Or specific users
                 Permission.write(Role.users())
             ]
-        );
+        });
 
         return result as unknown as Conversations;
     }
@@ -166,31 +166,31 @@ export class ChatService {
     async getConversations(): Promise<Conversations[]> {
         const user = await account.get();
         
-        const result = await tablesDB.listRows(
-            DATABASE_ID,
-            TABLES.CONVERSATIONS,
-            [
+        const result = await tablesDB.listRows({
+            databaseId: DATABASE_ID,
+            tableId: TABLES.CONVERSATIONS,
+            queries: [
                 Query.contains('participantIds', [user.$id]),
                 Query.orderDesc('updatedAt')
             ]
-        );
+        });
 
         return result.rows as unknown as Conversations[];
     }
 
     private async updateConversationLastMessage(conversationId: string, text: string, senderId: string) {
         try {
-            await tablesDB.updateRow(
-                DATABASE_ID,
-                TABLES.CONVERSATIONS,
-                conversationId,
-                {
+            await tablesDB.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                rowId: conversationId,
+                data: {
                     lastMessageText: text, // We might want to encrypt this too or leave generic
                     lastMessageAt: new Date().toISOString(),
                     lastMessageSenderId: senderId,
                     updatedAt: new Date().toISOString()
                 }
-            );
+            });
         } catch (e) {
             console.error('Failed to update conversation last message', e);
         }
