@@ -2,10 +2,10 @@
 import { ID, Query, Permission, Role } from 'appwrite';
 import { tablesDB, account } from '../config/client';
 import { securityService } from '@/lib/security';
-import { 
+import type { 
     Messages, 
     Conversations, 
-    MessagesContentType, 
+    MessagesContentType,
     MessagesStatus,
     ConversationsType
 } from '@/types/appwrite.d';
@@ -25,7 +25,7 @@ export class ChatService {
     async sendMessage(
         conversationId: string, 
         content: string, 
-        type: MessagesContentType = MessagesContentType.TEXT,
+        type: MessagesContentType = 'text' as MessagesContentType,
         replyToId?: string
     ): Promise<Messages> {
         const user = await account.get();
@@ -44,7 +44,7 @@ export class ChatService {
             senderId: user.$id,
             content: encryptedPayload,
             contentType: type,
-            status: MessagesStatus.SENT,
+            status: 'sent' as MessagesStatus,
             createdAt: new Date().toISOString(),
             mediaUrls: [],
             mediaFileIds: [],
@@ -85,7 +85,7 @@ export class ChatService {
             ]
         });
 
-        const messages = result.rows as unknown as Messages[];
+        const messages = (result as unknown as { rows: Messages[] }).rows;
 
         // Decrypt all messages
         const decryptedMessages = await Promise.all(messages.map(async (msg) => {
@@ -110,7 +110,7 @@ export class ChatService {
      */
     async createConversation(
         participantIds: string[], 
-        type: ConversationsType = ConversationsType.DIRECT,
+        type: ConversationsType = 'direct' as ConversationsType,
         name?: string,
         options?: {
             description?: string;
@@ -122,7 +122,7 @@ export class ChatService {
         const allParticipants = [...new Set([...participantIds, user.$id])];
 
         // Check if direct conversation already exists
-        if (type === ConversationsType.DIRECT) {
+        if (type === 'direct') {
             // This is a simplified check. In a real app, we'd query for existing convs with these exact participants.
             // For now, we'll just create a new one.
         }
@@ -152,7 +152,7 @@ export class ChatService {
             rowId: ID.unique(),
             data: conversationData,
             permissions: [
-                Permission.read(Role.users()), // Or specific users
+                Permission.read(Role.users()),
                 Permission.write(Role.users())
             ]
         });
@@ -166,31 +166,31 @@ export class ChatService {
     async getConversations(): Promise<Conversations[]> {
         const user = await account.get();
         
-        const result = await tablesDB.listRows({
-            databaseId: DATABASE_ID,
-            tableId: TABLES.CONVERSATIONS,
-            queries: [
+        const result = await tablesDB.listRows(
+            DATABASE_ID,
+            TABLES.CONVERSATIONS,
+            [
                 Query.contains('participantIds', [user.$id]),
                 Query.orderDesc('updatedAt')
             ]
-        });
+        );
 
-        return result.rows as unknown as Conversations[];
+        return (result as unknown as { rows: Conversations[] }).rows;
     }
 
     private async updateConversationLastMessage(conversationId: string, text: string, senderId: string) {
         try {
-            await tablesDB.updateRow({
-                databaseId: DATABASE_ID,
-                tableId: TABLES.CONVERSATIONS,
-                rowId: conversationId,
-                data: {
+            await tablesDB.updateRow(
+                DATABASE_ID,
+                TABLES.CONVERSATIONS,
+                conversationId,
+                {
                     lastMessageText: text, // We might want to encrypt this too or leave generic
                     lastMessageAt: new Date().toISOString(),
                     lastMessageSenderId: senderId,
                     updatedAt: new Date().toISOString()
                 }
-            });
+            );
         } catch (e) {
             console.error('Failed to update conversation last message', e);
         }

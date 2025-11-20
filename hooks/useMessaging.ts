@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { chatService, realtimeService } from '@/lib/appwrite';
-import { Conversations, Messages, MessagesContentType } from '@/types/appwrite.d';
+import type { Conversations, Messages, MessagesContentType } from '@/types/appwrite.d';
 
 export type Conversation = Conversations;
 export type ChatMessage = Messages;
@@ -192,7 +192,7 @@ export function useMessages(conversationId: string) {
     };
   }, [conversationId, loadMessages]);
 
-  const sendMessage = useCallback(async (content: string, type: MessagesContentType = MessagesContentType.TEXT, replyToId?: string) => {
+  const sendMessage = useCallback(async (content: string, type: MessagesContentType = 'text' as MessagesContentType, replyToId?: string) => {
     try {
       const newMsg = await chatService.sendMessage(conversationId, content, type, replyToId);
       // Message will be added via real-time subscription (which triggers reload)
