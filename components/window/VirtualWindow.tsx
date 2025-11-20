@@ -11,6 +11,7 @@ import { ChatWindow } from '@/components/chat/window/ChatWindow';
 import { CallWindow } from '@/components/window/CallWindow';
 import { PerformanceWidget } from '@/components/performance/PerformanceWidget';
 import { ExtensionManager } from '@/components/extensions/ExtensionManager';
+import { SettingsWindow } from '@/components/settings/SettingsWindow';
 import { motion } from 'framer-motion';
 import { useTheme, alpha } from '@mui/material/styles';
 import { useWindowAnimation } from '@/hooks/useMotionConfig';
@@ -29,7 +30,7 @@ const DefaultContentRegistry: Record<WindowContentType, React.ComponentType<Reco
     return <CallWindow {...typedProps} />;
   },
   PROFILE: () => <Box p={2}>Profile content</Box>,
-  SETTINGS: () => <Box p={2}>Settings content</Box>,
+  SETTINGS: () => <SettingsWindow />,
   CUSTOM: () => <Box p={2}>Custom content</Box>,
   PERFORMANCE: () => <PerformanceWidget />,
   EXTENSION_MANAGER: () => <ExtensionManager />,

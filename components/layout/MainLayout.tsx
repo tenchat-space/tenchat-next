@@ -5,6 +5,7 @@ import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { useConversations, type Conversation } from "@/hooks/useMessaging";
 import { useWindowBridge } from "@/hooks/useWindowBridge";
+import { useWindow } from "@/contexts/WindowContext";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { AuthOverlay } from "@/components/auth/AuthOverlay";
 import { MainSidebar } from "@/components/navigation/MainSidebar";
@@ -13,7 +14,6 @@ import { ConversationList } from "@/components/chat/sidebar/ConversationList";
 import { ChatWindow } from "@/components/chat/window/ChatWindow";
 import { ProfilePanel } from "@/components/chat/info/ProfilePanel";
 import { WalletPanel } from "@/components/chat/info/WalletPanel";
-import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { NewChatDialog } from "@/components/chat/dialogs/NewChatDialog";
 import { CreateChannelDialog } from "@/components/chat/dialogs/CreateChannelDialog";
 import { StoryViewer } from "@/components/chat/window/StoryViewer";
@@ -40,7 +40,6 @@ export function MainLayout() {
   
   // Dialog states
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [createChannelOpen, setCreateChannelOpen] = useState(false);
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
@@ -50,6 +49,7 @@ export function MainLayout() {
     userName: displayName,
   });
   const { openChatWindow, openCallWindow } = useWindowBridge();
+  const { openWindow } = useWindow();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -139,6 +139,17 @@ export function MainLayout() {
     }
   };
 
+  const handleOpenSettings = () => {
+    openWindow({
+      id: 'settings-window',
+      title: 'Settings',
+      type: 'SETTINGS',
+      component: null, // Will use default from registry
+    }, {
+      size: { width: 900, height: 700 }
+    });
+  };
+
   return (
     <>
       <Box
@@ -164,7 +175,7 @@ export function MainLayout() {
             activeRightId={activeRightId}
             setActiveRightId={(id) => {
               if (id === 'settings') {
-                  setSettingsOpen(true);
+                  handleOpenSettings();
               } else {
                   setActiveRightId(id);
               }
@@ -201,7 +212,7 @@ export function MainLayout() {
             <ProfilePanel
               currentAccount={currentAccount}
               logout={logout}
-              onOpenSettings={() => setSettingsOpen(true)}
+              onOpenSettings={handleOpenSettings}
             />
         )}
         {!isMobile && activeRightId === 'wallet' && (
@@ -219,7 +230,7 @@ export function MainLayout() {
             activeRightId={activeRightId}
             setActiveRightId={(id) => {
               if (id === 'settings') {
-                  setSettingsOpen(true);
+                  handleOpenSettings();
               } else {
                   setActiveRightId(id);
               }
@@ -232,12 +243,6 @@ export function MainLayout() {
       <AuthOverlay />
       <AuthDialog open={authDialogOpen} onClose={() => setAuthDialogOpen(false)} />
       
-      <SettingsDialog 
-        open={settingsOpen} 
-        onClose={() => setSettingsOpen(false)} 
-        currentUser={currentAccount} 
-      />
-
       <NewChatDialog 
         open={newChatOpen}
         onClose={() => setNewChatOpen(false)}
