@@ -600,3 +600,5 @@ export function SettingsWindow() {
   );
 }
 
+export const SettingsDialog = SettingsWindow;
+

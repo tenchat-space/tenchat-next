@@ -58,7 +58,7 @@ export class SecurityService {
     return window.crypto.subtle.deriveKey(
       {
         name: this.KDF_ALGORITHM,
-        salt: salt,
+        salt: salt as BufferSource,
         iterations: this.ITERATIONS,
         hash: 'SHA-256',
       },
@@ -84,7 +84,7 @@ export class SecurityService {
     const encryptedBuffer = await window.crypto.subtle.encrypt(
       {
         name: this.ALGORITHM,
-        iv: iv,
+        iv: iv as BufferSource,
       },
       this.masterKey,
       encodedData
@@ -111,10 +111,10 @@ export class SecurityService {
       const decryptedBuffer = await window.crypto.subtle.decrypt(
         {
           name: this.ALGORITHM,
-          iv: ivBuffer,
+          iv: ivBuffer as BufferSource,
         },
         this.masterKey,
-        encryptedBuffer
+        encryptedBuffer as BufferSource
       );
 
       const dec = new TextDecoder();
@@ -142,7 +142,7 @@ export class SecurityService {
     const encryptedMasterKey = await window.crypto.subtle.encrypt(
       {
         name: this.ALGORITHM,
-        iv: iv,
+        iv: iv as BufferSource,
       },
       userKey,
       rawMasterKey
@@ -168,10 +168,10 @@ export class SecurityService {
     const rawMasterKey = await window.crypto.subtle.decrypt(
       {
         name: this.ALGORITHM,
-        iv: ivBuffer,
+        iv: ivBuffer as BufferSource,
       },
       userKey,
-      encryptedKeyBuffer
+      encryptedKeyBuffer as BufferSource
     );
 
     this.masterKey = await window.crypto.subtle.importKey(

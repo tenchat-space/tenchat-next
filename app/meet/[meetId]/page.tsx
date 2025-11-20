@@ -49,7 +49,7 @@ export default function MeetingPage() {
         ) : (
           <Stack spacing={3} alignItems="center">
             <Typography variant="h4">Ready to join?</Typography>
-            <Button variant="contained" size="large" onClick={join}>
+            <Button variant="contained" size="large" onClick={() => join()}>
               Join Meeting
             </Button>
             <Button variant="text" color="error" onClick={() => router.back()}>

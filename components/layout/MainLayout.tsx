@@ -91,10 +91,10 @@ export function MainLayout() {
         }
       } else if (item.type === 'call') {
         openCallWindow({
+          meetId: item.data.meetId || item.data.id,
           callId: item.data.id,
           participant: item.data.name,
           type: item.data.type,
-          status: item.data.status,
         });
       }
     } catch (err) {

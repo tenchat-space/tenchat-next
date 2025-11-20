@@ -29,6 +29,7 @@ import { storageService } from "@/lib/appwrite/services/storage.service";
 import { BUCKET_IDS } from "@/lib/appwrite/config/constants";
 import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRenderer";
 import { useTheme, alpha } from '@mui/material/styles';
+import type { MessagesContentType } from "@/types/appwrite.d";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -53,10 +54,8 @@ export function ChatWindow({
     if (!conversation || !composer.trim()) return;
     try {
       await sendMessage({
-        conversationId: conversation.$id,
-        senderId: currentUserId,
         content: composer.trim(),
-        contentType: "text",
+        type: "text" as MessagesContentType,
       });
       setComposer("");
     } catch (error) {
@@ -73,10 +72,8 @@ export function ChatWindow({
       const uploadedFile = await storageService.uploadMessageAttachment(file);
       
       await sendMessage({
-        conversationId: conversation.$id,
-        senderId: currentUserId,
         content: "Sent an image",
-        contentType: "image",
+        type: "image" as MessagesContentType,
         metadata: {
           fileId: uploadedFile.$id,
           bucketId: BUCKET_IDS.MESSAGES,
@@ -97,7 +94,7 @@ export function ChatWindow({
   const formatConversationLabel = (conv: Conversation) => {
     if (conv.name) return conv.name;
     if (conv.participantIds?.length === 2) {
-      const other = conv.participantIds.find((id) => id !== currentUserId);
+      const other = conv.participantIds.find((id: string) => id !== currentUserId);
       return other || "Direct chat";
     }
     return "Tenchat room";

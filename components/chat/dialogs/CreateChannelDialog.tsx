@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useAppwrite } from "@/contexts/AppwriteContext";
 import { chatService } from "@/lib/appwrite";
+import type { ConversationsType } from "@/types/appwrite.d";
 interface CreateChannelDialogProps {
   open: boolean;
   onClose: () => void;
@@ -34,7 +35,7 @@ export function CreateChannelDialog({ open, onClose }: CreateChannelDialogProps)
       setIsLoading(true);
       await chatService.createConversation(
         [currentAccount.$id],
-        'channel',
+        'channel' as ConversationsType,
         name,
         {
           description,

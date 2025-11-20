@@ -22,6 +22,8 @@ export function TenchatThemeProvider({ children }: TenchatThemeProviderProps) {
 
     const baseThemeOptions = getThemeOptions(mode, styleConfig.paletteId);
     
+    const primaryMainColor = (baseThemeOptions.palette?.primary as { main?: string })?.main || '#1976d2';
+
     const radius = BORDER_RADIUS_VALUES[styleConfig.borderRadius];
     const shadow = DEPTH_SHADOWS[styleConfig.depth];
     const blur = BLUR_VALUES[styleConfig.blur];
@@ -61,7 +63,7 @@ export function TenchatThemeProvider({ children }: TenchatThemeProviderProps) {
                 ...(baseThemeOptions.components?.MuiButton?.styleOverrides?.root as any)['&:hover'],
                 transform: styleConfig.scaleOnHover ? 'translateY(-1px)' : 'none',
                 boxShadow: styleConfig.activeGlow 
-                  ? (mode === 'dark' ? `0 4px 12px ${baseThemeOptions.palette?.primary?.main}40` : `0 4px 12px ${baseThemeOptions.palette?.primary?.main}40`)
+                  ? (mode === 'dark' ? `0 4px 12px ${primaryMainColor}40` : `0 4px 12px ${primaryMainColor}40`)
                   : 'none',
               },
             },

@@ -192,10 +192,32 @@ export function useMessages(conversationId: string) {
     };
   }, [conversationId, loadMessages]);
 
-  const sendMessage = useCallback(async (content: string, type: MessagesContentType = 'text' as MessagesContentType, replyToId?: string) => {
+  type SendMessagePayload = {
+    content: string;
+    type?: MessagesContentType;
+    replyToId?: string;
+    metadata?: Record<string, unknown> | string;
+  };
+
+  const sendMessage = useCallback(async (payload: SendMessagePayload) => {
+    if (!conversationId) {
+      throw new Error('Conversation ID is required to send a message.');
+    }
+
     try {
-      const newMsg = await chatService.sendMessage(conversationId, content, type, replyToId);
-      // Message will be added via real-time subscription (which triggers reload)
+      const metadataString = typeof payload.metadata === 'string'
+        ? payload.metadata
+        : payload.metadata
+          ? JSON.stringify(payload.metadata)
+          : undefined;
+
+      const newMsg = await chatService.sendMessage(
+        conversationId,
+        payload.content,
+        payload.type ?? ('text' as MessagesContentType),
+        payload.replyToId,
+        metadataString
+      );
       return newMsg;
     } catch (err) {
       setError(err as Error);
@@ -203,15 +225,15 @@ export function useMessages(conversationId: string) {
     }
   }, [conversationId]);
 
-  const addReaction = useCallback(async (messageId: string, userId: string, emoji: string) => {
+  const addReaction = useCallback(async () => {
     // TODO: Implement in chatService
     console.warn('addReaction not implemented');
   }, []);
 
-  const markAsRead = useCallback(async (userId: string) => {
+  const markAsRead = useCallback(async () => {
     // TODO: Implement in chatService
     console.warn('markAsRead not implemented');
-  }, [conversationId]);
+  }, []);
 
   return {
     messages,

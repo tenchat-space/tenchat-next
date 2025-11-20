@@ -37,8 +37,8 @@ export function ConversationList({
 }: ConversationListProps) {
   const formatConversationLabel = (conv: Conversation) => {
     if (conv.name) return conv.name;
-    if (conv.participantIds?.length === 2) {
-      const other = conv.participantIds.find((id) => id !== legacyUserId);
+    if (conv.participantIds?.length === 2 && legacyUserId) {
+      const other = conv.participantIds.find((id: string) => id !== legacyUserId);
       return other || "Direct chat";
     }
     return "Tenchat room";

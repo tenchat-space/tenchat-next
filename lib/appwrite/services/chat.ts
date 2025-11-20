@@ -26,7 +26,8 @@ export class ChatService {
         conversationId: string, 
         content: string, 
         type: MessagesContentType = 'text' as MessagesContentType,
-        replyToId?: string
+        replyToId?: string,
+        metadata?: string
     ): Promise<Messages> {
         const user = await account.get();
         
@@ -45,6 +46,7 @@ export class ChatService {
             content: encryptedPayload,
             contentType: type,
             status: 'sent' as MessagesStatus,
+            metadata: metadata ?? null,
             createdAt: new Date().toISOString(),
             mediaUrls: [],
             mediaFileIds: [],

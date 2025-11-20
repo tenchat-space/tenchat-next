@@ -17,9 +17,9 @@ import { useWindowBridge } from "@/hooks/useWindowBridge";
 import { useContextMenu } from "@/contexts/ContextMenuContext";
 
 const MOCK_CALLS = [
-  { id: "1", name: "Alice Chen", time: "Today, 10:30 AM", type: "voice", status: "missed" },
-  { id: "2", name: "Bob Smith", time: "Yesterday, 4:15 PM", type: "video", status: "outgoing" },
-  { id: "3", name: "Alice Chen", time: "Mon, 9:00 AM", type: "voice", status: "incoming" },
+  { id: "1", meetId: "meet-1", name: "Alice Chen", time: "Today, 10:30 AM", type: "voice", status: "missed" },
+  { id: "2", meetId: "meet-2", name: "Bob Smith", time: "Yesterday, 4:15 PM", type: "video", status: "outgoing" },
+  { id: "3", meetId: "meet-3", name: "Alice Chen", time: "Mon, 9:00 AM", type: "voice", status: "incoming" },
 ];
 
 export function CallHistory() {
@@ -27,11 +27,11 @@ export function CallHistory() {
   const { showMenu, hideMenu } = useContextMenu();
 
   const handleOpenCall = (call: (typeof MOCK_CALLS)[number]) => {
-    openCallWindow({
-      callId: call.id,
+      openCallWindow({
+        meetId: call.meetId,
+        callId: call.id,
       participant: call.name,
       type: call.type as 'voice' | 'video',
-      status: call.status,
     });
   };
 

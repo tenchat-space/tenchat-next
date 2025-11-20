@@ -20,7 +20,7 @@ export interface OpenCallWindowArgs extends CallWindowProps {
 const formatConversationTitle = (conversation: Conversation, currentUserId: string) => {
   if (conversation.name) return conversation.name;
   if (conversation.participantIds?.length === 2) {
-    const other = conversation.participantIds.find((id) => id !== currentUserId);
+    const other = conversation.participantIds.find((id: string) => id !== currentUserId);
     return other || 'Direct chat';
   }
   return 'Tenchat room';
@@ -53,13 +53,13 @@ export function useWindowBridge() {
   );
 
   const openCallWindow = useCallback(
-    ({ callId, onHangUp, participant, status, type }: OpenCallWindowArgs) => {
+    ({ callId, onHangUp, participant, type, meetId }: OpenCallWindowArgs) => {
       openWindow({
         id: `call-${callId}`,
         title: `${participant} • ${type === 'video' ? 'Video' : 'Voice'} call`,
         type: 'CALL',
-        component: <CallWindow participant={participant} status={status} type={type} onHangUp={onHangUp} />,
-        props: { participant, status, type, onHangUp },
+        component: <CallWindow meetId={meetId} participant={participant} type={type} onHangUp={onHangUp} />,
+        props: { meetId, participant, type, onHangUp },
       });
     },
     [openWindow]
