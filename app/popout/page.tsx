@@ -5,11 +5,19 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { TenchatThemeProvider } from '@/components/providers/TenchatThemeProvider';
+import { AppwriteProvider } from "@/contexts/AppwriteContext";
+import { AnimationProvider } from "@/contexts/AnimationContext";
+import { StyleProvider } from "@/contexts/StyleContext";
+import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
+import { WindowSystem } from '@/components/window/WindowSystem';
 
 // Registry of components that can be popped out
 // In a real app, this would be a dynamic registry or lazy loaded
 import { CallWindow } from '@/components/window/CallWindow';
 import { ChatWindow } from '@/components/chat/window/ChatWindow';
+import { SettingsWindow } from '@/components/settings/SettingsWindow';
+import { PerformanceWidget } from '@/components/performance/PerformanceWidget';
+import { ExtensionManager } from '@/components/extensions/ExtensionManager';
 // Import other components as needed
 
 interface PopoutState {
@@ -63,6 +71,15 @@ function PopoutContent() {
           case 'CHAT':
             comp = <ChatWindow {...state.props} />;
             break;
+          case 'SETTINGS':
+            comp = <SettingsWindow />;
+            break;
+          case 'PERFORMANCE':
+            comp = <PerformanceWidget />;
+            break;
+          case 'EXTENSION_MANAGER':
+            comp = <ExtensionManager />;
+            break;
           // Add other cases
           default:
             comp = <div>Unknown component type: {state.type}</div>;
@@ -95,10 +112,20 @@ function PopoutContent() {
 
 export default function PopoutPage() {
   return (
-    <TenchatThemeProvider>
-      <Suspense fallback={<CircularProgress />}>
-        <PopoutContent />
-      </Suspense>
-    </TenchatThemeProvider>
+    <StyleProvider>
+      <TenchatThemeProvider>
+        <AnimationProvider>
+          <AppwriteProvider>
+            <ContextMenuProvider>
+              <WindowSystem>
+                <Suspense fallback={<CircularProgress />}>
+                  <PopoutContent />
+                </Suspense>
+              </WindowSystem>
+            </ContextMenuProvider>
+          </AppwriteProvider>
+        </AnimationProvider>
+      </TenchatThemeProvider>
+    </StyleProvider>
   );
 }
