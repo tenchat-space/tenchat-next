@@ -2,13 +2,15 @@
 import { ID, Query, Permission, Role } from 'appwrite';
 import { tablesDB, account } from '../config/client';
 import { securityService } from '@/lib/security';
-import type { 
-    Messages, 
-    Conversations, 
+import { 
     MessagesContentType,
     MessagesStatus,
     ConversationsType
-} from '@/types/appwrite.d';
+} from '@/types/appwrite-enums';
+import type { 
+    Messages, 
+    Conversations 
+} from '@/types/appwrite-models';
 
 const DATABASE_ID = 'chat'; // From appwrite.config.json
 const TABLES = {
@@ -25,7 +27,7 @@ export class ChatService {
     async sendMessage(
         conversationId: string, 
         content: string, 
-        type: MessagesContentType = 'text' as MessagesContentType,
+        type: MessagesContentType = MessagesContentType.TEXT,
         replyToId?: string,
         metadata?: string
     ): Promise<Messages> {
@@ -45,7 +47,7 @@ export class ChatService {
             senderId: user.$id,
             content: encryptedPayload,
             contentType: type,
-            status: 'sent' as MessagesStatus,
+            status: MessagesStatus.SENT,
             metadata: metadata ?? null,
             createdAt: new Date().toISOString(),
             mediaUrls: [],
@@ -112,7 +114,7 @@ export class ChatService {
      */
     async createConversation(
         participantIds: string[], 
-        type: ConversationsType = 'direct' as ConversationsType,
+        type: ConversationsType = ConversationsType.DIRECT,
         name?: string,
         options?: {
             description?: string;

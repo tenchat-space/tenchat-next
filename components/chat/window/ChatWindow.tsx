@@ -32,7 +32,7 @@ import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRend
 import { useTheme, alpha } from '@mui/material/styles';
 import { PredictionCard } from "@/components/chat/prediction/PredictionCard";
 import { CreatePredictionDialog } from "@/components/chat/dialogs/CreatePredictionDialog";
-import type { MessagesContentType } from "@/types/appwrite.d";
+import { MessagesContentType } from "@/types/appwrite-enums";
 import { PredictionMarket } from "@/types/prediction";
 
 interface ChatWindowProps {
@@ -60,7 +60,7 @@ export function ChatWindow({
     try {
       await sendMessage({
         content: composer.trim(),
-        type: "text" as MessagesContentType,
+        type: MessagesContentType.TEXT,
       });
       setComposer("");
     } catch (error) {
@@ -78,7 +78,7 @@ export function ChatWindow({
       
       await sendMessage({
         content: "Sent an image",
-        type: "image" as MessagesContentType,
+        type: MessagesContentType.IMAGE,
         metadata: {
           fileId: uploadedFile.$id,
           bucketId: BUCKET_IDS.MESSAGES,
@@ -101,7 +101,7 @@ export function ChatWindow({
     try {
       await sendMessage({
         content: "New Prediction Market",
-        type: 'prediction' as MessagesContentType,
+        type: MessagesContentType.PREDICTION,
         metadata: marketData as Record<string, unknown>
       });
     } catch (error) {
@@ -208,6 +208,10 @@ export function ChatWindow({
             <Stack spacing={2} direction="column-reverse">
               {messages.map((message) => {
                 const isSelf = message.senderId === currentUserId;
+                // Parse metadata if it's a JSON string
+                const parsedMetadata = message.metadata 
+                  ? (typeof message.metadata === 'string' ? JSON.parse(message.metadata) : message.metadata)
+                  : null;
                 return (
                   <Box
                     key={message.$id}
@@ -238,10 +242,10 @@ export function ChatWindow({
                         </Typography>
                       )}
                       
-                      {message.contentType === 'image' && message.metadata?.fileId ? (
+                      {message.contentType === 'image' && parsedMetadata?.fileId ? (
                         <Box 
                           component="img"
-                          src={storageService.getFilePreview(message.metadata.bucketId, message.metadata.fileId, 400, 0)}
+                          src={storageService.getFilePreview(parsedMetadata.bucketId, parsedMetadata.fileId, 400, 0)}
                           alt="Attachment"
                           sx={{
                             maxWidth: '100%',
@@ -251,14 +255,14 @@ export function ChatWindow({
                             cursor: 'pointer'
                           }}
                           onClick={() => {
-                            if (message.metadata) {
-                              window.open(storageService.getFileView(message.metadata.bucketId, message.metadata.fileId), '_blank');
+                            if (parsedMetadata) {
+                              window.open(storageService.getFileView(parsedMetadata.bucketId, parsedMetadata.fileId), '_blank');
                             }
                           }}
                         />
-                      ) : message.contentType === ('prediction' as MessagesContentType) && message.metadata ? (
+                      ) : message.contentType === MessagesContentType.PREDICTION && parsedMetadata ? (
                         <PredictionCard 
-                          market={typeof message.metadata === 'string' ? JSON.parse(message.metadata) : message.metadata} 
+                          market={parsedMetadata} 
                           onBet={(optionId, amount) => console.log('Bet placed:', optionId, amount)}
                           isSelf={isSelf}
                         />

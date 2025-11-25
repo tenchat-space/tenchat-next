@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { chatService, realtimeService } from '@/lib/appwrite';
-import type { Conversations, Messages, MessagesContentType } from '@/types/appwrite.d';
+import { MessagesContentType } from '@/types/appwrite-enums';
+import type { Conversations, Messages } from '@/types/appwrite-models';
 
 export type Conversation = Conversations;
 export type ChatMessage = Messages;
@@ -214,7 +215,7 @@ export function useMessages(conversationId: string) {
       const newMsg = await chatService.sendMessage(
         conversationId,
         payload.content,
-        payload.type ?? ('text' as MessagesContentType),
+        payload.type ?? MessagesContentType.TEXT,
         payload.replyToId,
         metadataString
       );
