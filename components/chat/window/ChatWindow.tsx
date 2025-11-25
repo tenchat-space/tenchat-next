@@ -402,7 +402,7 @@ export function ChatWindow({
               <IconButton 
                 color="secondary" 
                 onClick={handleSendMessage}
-                disabled={!conversation || !isAuthenticated}
+                disabled={!conversation || !canChat}
                 sx={{ 
                   bgcolor: sendBtnBg, 
                   '&:hover': { bgcolor: sendBtnHover },
@@ -415,7 +415,7 @@ export function ChatWindow({
             ) : (
               <IconButton 
                 color="default" 
-                disabled={!conversation}
+                disabled={!conversation || !canChat}
                 sx={{ width: 48, height: 48 }}
               >
                 <Mic />

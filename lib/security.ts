@@ -96,7 +96,7 @@ export class SecurityService {
       // 3. Create AES-GCM key
       this.encryptionKey = await window.crypto.subtle.importKey(
         'raw',
-        keyMaterial,
+        keyMaterial.buffer as ArrayBuffer,
         { name: this.ALGORITHM },
         false, // non-extractable for security
         ['encrypt', 'decrypt']
