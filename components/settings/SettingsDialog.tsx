@@ -9,6 +9,7 @@ import {
   Switch,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   ListItemSecondaryAction,
   Divider,
@@ -97,20 +98,27 @@ interface MotionListItemProps {
   onClick?: () => void;
 }
 
-const MotionListItem = ({ children, button, onClick, ...props }: MotionListItemProps) => {
+const MotionListItem = ({ children, button, onClick }: MotionListItemProps) => {
   const { whileHover, whileTap } = useVisualFeedback();
   const theme = useTheme();
   const paperBg = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.25 : 0.75);
 
+  if (button) {
+    return (
+      <motion.div whileHover={whileHover} whileTap={whileTap}>
+        <Paper elevation={0} sx={{ mb: 1, bgcolor: paperBg, borderRadius: 2, overflow: 'hidden' }}>
+          <ListItemButton onClick={onClick}>
+            {children}
+          </ListItemButton>
+        </Paper>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div whileHover={whileHover} whileTap={whileTap}>
       <Paper elevation={0} sx={{ mb: 1, bgcolor: paperBg, borderRadius: 2, overflow: 'hidden' }}>
-        <ListItem 
-          component={button ? 'div' : undefined}
-          onClick={onClick}
-          sx={button ? { cursor: 'pointer' } : undefined}
-          {...props}
-        >
+        <ListItem>
           {children}
         </ListItem>
       </Paper>
