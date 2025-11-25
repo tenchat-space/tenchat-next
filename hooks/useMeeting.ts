@@ -51,16 +51,18 @@ export function useMeeting(meetId: string) {
   useEffect(() => {
     if (state !== 'connected') return;
 
-    const handleRemoteStream = (stream: MediaStream) => {
-      setRemoteStream(stream);
+    const handleRemoteStream = (...args: unknown[]) => {
+      const stream = args[0] as MediaStream;
+      if (stream) {
+        setRemoteStream(stream);
+      }
     };
 
     meetingService.on('remote-stream', handleRemoteStream);
 
-    // Check if stream already exists - use microtask to avoid synchronous setState
+    // Check if stream already exists - use queueMicrotask to avoid synchronous setState
     const currentRemote = meetingService.getRemoteStream();
     if (currentRemote) {
-      // Use queueMicrotask to avoid synchronous setState in effect
       queueMicrotask(() => {
         setRemoteStream(currentRemote);
       });
