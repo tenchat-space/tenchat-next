@@ -1,23 +1,58 @@
-
 /**
- * Security Service
- * Handles End-to-End Encryption (E2EE) logic.
+ * Security Service - Wallet-Based E2EE
  * 
  * Architecture:
- * 1. Master Key: A random 256-bit AES-GCM key generated on client.
- * 2. User Key: Derived from user's password/secret using PBKDF2.
- * 3. Encrypted Master Key: Master Key encrypted with User Key, stored in DB.
- * 4. Local Storage: Master Key stored in IndexedDB (non-exportable).
+ * - Encryption Key is derived deterministically from a wallet signature
+ * - User signs a specific message once, and we derive an AES-256 key from that signature
+ * - The key is cached in IndexedDB for the session (no password needed)
+ * - If user clears storage or switches devices, they just sign again with same wallet
+ * 
+ * This approach provides:
+ * 1. Seamless UX - no passwords or recovery phrases to manage
+ * 2. Wallet-bound security - only the wallet owner can decrypt
+ * 3. Cross-device support - same wallet = same encryption key
+ * 4. No server-side key storage needed
  */
+
+import { keccak256, toBytes, recoverPublicKey, type Hex } from 'viem';
+
+// Deterministic message for key derivation - DO NOT CHANGE after production launch
+// Changing this would invalidate all existing encrypted messages
+const ENCRYPTION_KEY_MESSAGE = `Tenchat E2EE Key Derivation
+
+By signing this message, you are generating your encryption key for Tenchat.
+
+This signature will be used to derive your personal encryption key.
+Your messages will be encrypted end-to-end.
+
+Important:
+- This does NOT authorize any blockchain transactions
+- This does NOT give Tenchat access to your funds
+- Only sign this on the official Tenchat application
+
+Domain: tenchat.app
+Version: 1
+Chain ID: Any`;
+
+export interface WalletSigner {
+  address: string;
+  signMessage: (message: string) => Promise<Hex>;
+}
+
+export interface EncryptionState {
+  isReady: boolean;
+  walletAddress: string | null;
+  error: string | null;
+}
 
 export class SecurityService {
   private static instance: SecurityService;
-  private masterKey: CryptoKey | null = null;
+  private encryptionKey: CryptoKey | null = null;
+  private walletAddress: string | null = null;
   private readonly ALGORITHM = 'AES-GCM';
-  private readonly KDF_ALGORITHM = 'PBKDF2';
-  private readonly SALT_LENGTH = 16;
   private readonly IV_LENGTH = 12;
-  private readonly ITERATIONS = 100000;
+  private readonly DB_NAME = 'TenchatEncryption';
+  private readonly DB_VERSION = 2;
 
   private constructor() {}
 
@@ -29,52 +64,99 @@ export class SecurityService {
   }
 
   /**
-   * Generates a new random Master Key.
+   * Get current encryption state
    */
-  async generateMasterKey(): Promise<CryptoKey> {
-    return window.crypto.subtle.generateKey(
-      {
-        name: this.ALGORITHM,
-        length: 256,
-      },
-      true,
-      ['encrypt', 'decrypt']
-    );
+  getState(): EncryptionState {
+    return {
+      isReady: this.encryptionKey !== null,
+      walletAddress: this.walletAddress,
+      error: null
+    };
   }
 
   /**
-   * Derives a User Key from a password/secret.
+   * Check if encryption is ready for use
    */
-  async deriveUserKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
-    const enc = new TextEncoder();
+  isReady(): boolean {
+    return this.encryptionKey !== null;
+  }
+
+  /**
+   * Initialize encryption from wallet signature.
+   * This is the ONLY way to set up encryption - no passwords.
+   */
+  async initializeFromWallet(signer: WalletSigner): Promise<void> {
+    try {
+      // 1. Request signature from wallet
+      const signature = await signer.signMessage(ENCRYPTION_KEY_MESSAGE);
+      
+      // 2. Derive encryption key from signature using HKDF
+      const keyMaterial = await this.deriveKeyFromSignature(signature);
+      
+      // 3. Create AES-GCM key
+      this.encryptionKey = await window.crypto.subtle.importKey(
+        'raw',
+        keyMaterial,
+        { name: this.ALGORITHM },
+        false, // non-extractable for security
+        ['encrypt', 'decrypt']
+      );
+      
+      // 4. Store wallet address for reference
+      this.walletAddress = signer.address;
+      
+      // 5. Persist to IndexedDB (key + wallet address)
+      await this.saveToStorage(keyMaterial, signer.address);
+      
+      console.log('Encryption initialized for wallet:', signer.address);
+    } catch (error) {
+      console.error('Failed to initialize encryption from wallet:', error);
+      throw new Error('Failed to initialize encryption. Please try signing again.');
+    }
+  }
+
+  /**
+   * Derive a 256-bit key from the wallet signature using HKDF.
+   */
+  private async deriveKeyFromSignature(signature: Hex): Promise<Uint8Array> {
+    // Convert signature to bytes
+    const signatureBytes = toBytes(signature);
+    
+    // Use HKDF to derive a proper encryption key
+    // Salt is derived from the message hash for determinism
+    const salt = toBytes(keccak256(toBytes(ENCRYPTION_KEY_MESSAGE)));
+    const info = new TextEncoder().encode('tenchat-e2ee-v1');
+    
+    // Import signature as key material
     const keyMaterial = await window.crypto.subtle.importKey(
       'raw',
-      enc.encode(password),
-      { name: this.KDF_ALGORITHM },
+      signatureBytes,
+      'HKDF',
       false,
-      ['deriveKey']
+      ['deriveBits']
     );
-
-    return window.crypto.subtle.deriveKey(
+    
+    // Derive 256 bits (32 bytes) for AES-256
+    const derivedBits = await window.crypto.subtle.deriveBits(
       {
-        name: this.KDF_ALGORITHM,
-        salt: salt as BufferSource,
-        iterations: this.ITERATIONS,
-        hash: 'SHA-256',
+        name: 'HKDF',
+        salt: salt,
+        info: info,
+        hash: 'SHA-256'
       },
       keyMaterial,
-      { name: this.ALGORITHM, length: 256 },
-      false,
-      ['encrypt', 'decrypt']
+      256
     );
+    
+    return new Uint8Array(derivedBits);
   }
 
   /**
-   * Encrypts data using the Master Key.
+   * Encrypts data using the wallet-derived key.
    */
   async encrypt(data: string): Promise<{ cipherText: string; iv: string }> {
-    if (!this.masterKey) {
-      throw new Error('Master Key not loaded');
+    if (!this.encryptionKey) {
+      throw new Error('Encryption not initialized. Please connect your wallet first.');
     }
 
     const enc = new TextEncoder();
@@ -86,7 +168,7 @@ export class SecurityService {
         name: this.ALGORITHM,
         iv: iv as BufferSource,
       },
-      this.masterKey,
+      this.encryptionKey,
       encodedData
     );
 
@@ -97,11 +179,11 @@ export class SecurityService {
   }
 
   /**
-   * Decrypts data using the Master Key.
+   * Decrypts data using the wallet-derived key.
    */
   async decrypt(cipherText: string, iv: string): Promise<string> {
-    if (!this.masterKey) {
-      throw new Error('Master Key not loaded');
+    if (!this.encryptionKey) {
+      throw new Error('Encryption not initialized. Please connect your wallet first.');
     }
 
     const encryptedBuffer = this.base64ToArrayBuffer(cipherText);
@@ -113,7 +195,7 @@ export class SecurityService {
           name: this.ALGORITHM,
           iv: ivBuffer as BufferSource,
         },
-        this.masterKey,
+        this.encryptionKey,
         encryptedBuffer as BufferSource
       );
 
@@ -123,68 +205,6 @@ export class SecurityService {
       console.error('Decryption failed', e);
       return '[Encrypted Message]';
     }
-  }
-
-  /**
-   * Exports the Master Key encrypted with the User Key (for storage in DB).
-   */
-  async exportMasterKey(password: string): Promise<{ encryptedKey: string; salt: string; iv: string }> {
-    if (!this.masterKey) {
-      throw new Error('Master Key not loaded');
-    }
-
-    const salt = window.crypto.getRandomValues(new Uint8Array(this.SALT_LENGTH));
-    const userKey = await this.deriveUserKey(password, salt);
-    const iv = window.crypto.getRandomValues(new Uint8Array(this.IV_LENGTH));
-
-    const rawMasterKey = await window.crypto.subtle.exportKey('raw', this.masterKey);
-    
-    const encryptedMasterKey = await window.crypto.subtle.encrypt(
-      {
-        name: this.ALGORITHM,
-        iv: iv as BufferSource,
-      },
-      userKey,
-      rawMasterKey
-    );
-
-    return {
-      encryptedKey: this.arrayBufferToBase64(encryptedMasterKey),
-      salt: this.arrayBufferToBase64(salt.buffer),
-      iv: this.arrayBufferToBase64(iv.buffer),
-    };
-  }
-
-  /**
-   * Imports the Master Key from the encrypted DB backup.
-   */
-  async importMasterKey(password: string, encryptedKey: string, salt: string, iv: string): Promise<void> {
-    const saltBuffer = this.base64ToArrayBuffer(salt);
-    const ivBuffer = this.base64ToArrayBuffer(iv);
-    const encryptedKeyBuffer = this.base64ToArrayBuffer(encryptedKey);
-
-    const userKey = await this.deriveUserKey(password, saltBuffer);
-
-    const rawMasterKey = await window.crypto.subtle.decrypt(
-      {
-        name: this.ALGORITHM,
-        iv: ivBuffer as BufferSource,
-      },
-      userKey,
-      encryptedKeyBuffer as BufferSource
-    );
-
-    this.masterKey = await window.crypto.subtle.importKey(
-      'raw',
-      rawMasterKey,
-      { name: this.ALGORITHM },
-      true,
-      ['encrypt', 'decrypt']
-    );
-    
-    // Persist to local storage (securely if possible, or just in memory for session)
-    // For "Telegram convenience", we might want to store it in IndexedDB
-    await this.saveKeyToStorage(this.masterKey);
   }
 
   // --- Helpers ---
@@ -210,86 +230,138 @@ export class SecurityService {
   }
 
   // --- Storage (IndexedDB) ---
-  // Using a simple wrapper for IndexedDB to store the key handle
-  
-  private async saveKeyToStorage(key: CryptoKey) {
-    // Implementation of IndexedDB storage for CryptoKey
-    // This allows the key to persist across reloads without re-entering password
-    // The key itself is non-exportable from WebCrypto if we set extractable: false, 
-    // but we need to export it to save to DB. 
-    // Here we save the handle.
-    
-    return new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open('TenchatKeyStore', 1);
+
+  private async saveToStorage(keyMaterial: Uint8Array, walletAddress: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        // Delete old stores if upgrading from password-based system
+        if (db.objectStoreNames.contains('keys')) {
+          db.deleteObjectStore('keys');
+        }
+        if (!db.objectStoreNames.contains('encryption')) {
+          db.createObjectStore('encryption');
+        }
+      };
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const tx = db.transaction('encryption', 'readwrite');
+        const store = tx.objectStore('encryption');
         
-        request.onupgradeneeded = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            if (!db.objectStoreNames.contains('keys')) {
-                db.createObjectStore('keys');
+        // Store key material and wallet address
+        store.put({
+          keyMaterial: Array.from(keyMaterial), // Store as array for IndexedDB
+          walletAddress: walletAddress,
+          createdAt: Date.now()
+        }, 'encryptionData');
+        
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      };
+      
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Load encryption key from storage if available.
+   * Returns true if key was loaded, false if wallet signature is needed.
+   */
+  public async loadFromStorage(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (db.objectStoreNames.contains('keys')) {
+          db.deleteObjectStore('keys');
+        }
+        if (!db.objectStoreNames.contains('encryption')) {
+          db.createObjectStore('encryption');
+        }
+      };
+
+      request.onsuccess = async (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        if (!db.objectStoreNames.contains('encryption')) {
+          resolve(false);
+          return;
+        }
+        
+        const tx = db.transaction('encryption', 'readonly');
+        const store = tx.objectStore('encryption');
+        const getReq = store.get('encryptionData');
+        
+        getReq.onsuccess = async () => {
+          if (getReq.result && getReq.result.keyMaterial) {
+            try {
+              const keyMaterial = new Uint8Array(getReq.result.keyMaterial);
+              
+              this.encryptionKey = await window.crypto.subtle.importKey(
+                'raw',
+                keyMaterial,
+                { name: this.ALGORITHM },
+                false,
+                ['encrypt', 'decrypt']
+              );
+              
+              this.walletAddress = getReq.result.walletAddress;
+              resolve(true);
+            } catch (e) {
+              console.error('Failed to restore encryption key:', e);
+              resolve(false);
             }
-        };
-
-        request.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            const tx = db.transaction('keys', 'readwrite');
-            const store = tx.objectStore('keys');
-            store.put(key, 'masterKey');
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        };
-        
-        request.onerror = () => reject(request.error);
-    });
-  }
-
-  public async loadKeyFromStorage(): Promise<boolean> {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open('TenchatKeyStore', 1);
-        
-        request.onupgradeneeded = (event) => {
-             const db = (event.target as IDBOpenDBRequest).result;
-             if (!db.objectStoreNames.contains('keys')) {
-                 db.createObjectStore('keys');
-             }
-        };
-
-        request.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            const tx = db.transaction('keys', 'readonly');
-            const store = tx.objectStore('keys');
-            const getReq = store.get('masterKey');
-            
-            getReq.onsuccess = () => {
-                if (getReq.result) {
-                    this.masterKey = getReq.result;
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            };
-            
-            getReq.onerror = () => reject(getReq.error);
-        };
-        
-        request.onerror = () => {
-            // DB might not exist yet
+          } else {
             resolve(false);
+          }
         };
+        
+        getReq.onerror = () => resolve(false);
+      };
+      
+      request.onerror = () => resolve(false);
     });
   }
-  
-  public async clearKeyFromStorage() {
-      return new Promise<void>((resolve) => {
-        const request = indexedDB.open('TenchatKeyStore', 1);
-        request.onsuccess = (event) => {
-            const db = (event.target as IDBOpenDBRequest).result;
-            const tx = db.transaction('keys', 'readwrite');
-            const store = tx.objectStore('keys');
-            store.delete('masterKey');
-            this.masterKey = null;
-            tx.oncomplete = () => resolve();
-        };
-      });
+
+  /**
+   * Clear encryption data from storage.
+   * Called when user disconnects wallet or wants to reset encryption.
+   */
+  public async clearStorage(): Promise<void> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        if (db.objectStoreNames.contains('encryption')) {
+          const tx = db.transaction('encryption', 'readwrite');
+          const store = tx.objectStore('encryption');
+          store.delete('encryptionData');
+          tx.oncomplete = () => {
+            this.encryptionKey = null;
+            this.walletAddress = null;
+            resolve();
+          };
+        } else {
+          resolve();
+        }
+      };
+      
+      request.onerror = () => resolve();
+    });
+  }
+
+  /**
+   * Get the message that needs to be signed for key derivation.
+   * Useful for UI to show users what they're signing.
+   */
+  public getSigningMessage(): string {
+    return ENCRYPTION_KEY_MESSAGE;
   }
 }
 

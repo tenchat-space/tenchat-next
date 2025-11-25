@@ -11,6 +11,7 @@ import {
   InputAdornment,
   Tooltip,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   AttachFile,
@@ -24,6 +25,8 @@ import {
   DoneAll,
   Image as ImageIcon,
   TrendingUp,
+  Lock,
+  LockOpen,
 } from "@mui/icons-material";
 import { Conversation, useMessages } from "@/hooks/useMessaging";
 import { storageService } from "@/lib/appwrite/services/storage.service";
@@ -34,6 +37,8 @@ import { PredictionCard } from "@/components/chat/prediction/PredictionCard";
 import { CreatePredictionDialog } from "@/components/chat/dialogs/CreatePredictionDialog";
 import { MessagesContentType } from "@/types/appwrite-enums";
 import { PredictionMarket } from "@/types/prediction";
+import { useWalletEncryption } from "@/contexts/WalletEncryptionContext";
+import { EncryptionPromptDialog } from "@/components/auth/EncryptionPromptDialog";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -52,11 +57,25 @@ export function ChatWindow({
   const [composer, setComposer] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [createPredictionOpen, setCreatePredictionOpen] = useState(false);
+  const [encryptionPromptOpen, setEncryptionPromptOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme();
+  
+  // Wallet encryption state
+  const { isEncryptionReady, encryptionWalletAddress } = useWalletEncryption();
+
+  // Check if chat functionality is available (need both auth and encryption)
+  const canChat = isAuthenticated && isEncryptionReady;
 
   const handleSendMessage = async () => {
     if (!conversation || !composer.trim()) return;
+    
+    // Check for encryption before sending
+    if (!isEncryptionReady) {
+      setEncryptionPromptOpen(true);
+      return;
+    }
+    
     try {
       await sendMessage({
         content: composer.trim(),
@@ -147,7 +166,11 @@ export function ChatWindow({
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {isAuthenticated 
-                ? conversation ? "Encrypted • Online" : "Secure Messaging"
+                ? conversation 
+                  ? isEncryptionReady 
+                    ? "🔒 End-to-End Encrypted • Online" 
+                    : "⚠️ Encryption not enabled"
+                  : "Secure Messaging"
                 : "Connect wallet to start"}
             </Typography>
           </Stack>
@@ -189,6 +212,27 @@ export function ChatWindow({
 
       {/* Messages Area */}
       <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* Encryption Warning Banner */}
+        {isAuthenticated && !isEncryptionReady && conversation && (
+          <Alert 
+            severity="warning" 
+            icon={<LockOpen />}
+            action={
+              <Button 
+                color="inherit" 
+                size="small" 
+                onClick={() => setEncryptionPromptOpen(true)}
+                sx={{ fontWeight: 600 }}
+              >
+                Enable Now
+              </Button>
+            }
+            sx={{ borderRadius: 0 }}
+          >
+            Wallet encryption is not enabled. Enable it to send and receive encrypted messages.
+          </Alert>
+        )}
+        
         <Box sx={{ flex: 1, overflowY: "auto", p: 3, display: "flex", flexDirection: "column-reverse" }}>
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -304,7 +348,7 @@ export function ChatWindow({
 
             <IconButton 
               color="secondary" 
-              disabled={!conversation || isUploading}
+              disabled={!conversation || isUploading || !canChat}
               onClick={() => fileInputRef.current?.click()}
             >
               {isUploading ? <CircularProgress size={24} color="inherit" /> : <AttachFile />}
@@ -312,7 +356,7 @@ export function ChatWindow({
 
             <IconButton
               color="secondary"
-              disabled={!conversation}
+              disabled={!conversation || !canChat}
               onClick={() => setCreatePredictionOpen(true)}
             >
               <TrendingUp />
@@ -320,7 +364,7 @@ export function ChatWindow({
             
             <TextField
               fullWidth
-              placeholder="Write a message..."
+              placeholder={canChat ? "Write a message..." : "Enable encryption to chat"}
               value={composer}
               onChange={(event) => setComposer(event.target.value)}
               onKeyDown={(event) => {
@@ -329,7 +373,7 @@ export function ChatWindow({
                   handleSendMessage();
                 }
               }}
-              disabled={!conversation || !isAuthenticated}
+              disabled={!conversation || !canChat}
               variant="outlined"
               size="medium"
               multiline
@@ -385,6 +429,11 @@ export function ChatWindow({
         open={createPredictionOpen} 
         onClose={() => setCreatePredictionOpen(false)} 
         onCreate={handleCreatePrediction} 
+      />
+
+      <EncryptionPromptDialog 
+        open={encryptionPromptOpen} 
+        onClose={() => setEncryptionPromptOpen(false)}
       />
     </Box>
   );

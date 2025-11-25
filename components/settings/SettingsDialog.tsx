@@ -24,7 +24,8 @@ import {
   InputLabel,
   SelectChangeEvent,
   Paper,
-  alpha
+  alpha,
+  Chip
 } from '@mui/material';
 import {
   PersonOutline,
@@ -34,7 +35,12 @@ import {
   Edit,
   Fingerprint,
   AccountBalanceWallet,
-  Extension
+  Extension,
+  Lock,
+  LockOpen,
+  OpenInNew,
+  CheckCircle,
+  Warning
 } from '@mui/icons-material';
 import { useAppwrite } from '@/contexts/AppwriteContext';
 import { useAnimationContext } from '@/contexts/AnimationContext';
@@ -47,6 +53,8 @@ import { useWindow } from '@/contexts/WindowContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVisualFeedback } from '@/hooks/useVisualFeedback';
 import { useTheme } from '@mui/material/styles';
+import { useWalletEncryption } from '@/contexts/WalletEncryptionContext';
+import { EncryptionPromptDialog } from '@/components/auth/EncryptionPromptDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -109,6 +117,36 @@ export function SettingsWindow() {
   const { openWindow } = useWindow();
   const { whileHover, whileTap } = useVisualFeedback();
   const theme = useTheme();
+  const { 
+    isEncryptionReady, 
+    encryptionWalletAddress, 
+    initializeEncryption, 
+    clearEncryption,
+    isInitializing 
+  } = useWalletEncryption();
+  const [showEncryptionPrompt, setShowEncryptionPrompt] = useState(false);
+
+  // Auth subdomain URL - uses the same domain but with 'auth' subdomain
+  const getAuthUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const hostname = window.location.hostname;
+    // Handle localhost differently
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3001'; // Assuming auth runs on different port locally
+    }
+    // For production, use auth subdomain
+    const parts = hostname.split('.');
+    if (parts[0] === 'auth') {
+      return window.location.origin; // Already on auth subdomain
+    }
+    // Replace first subdomain or prepend 'auth'
+    if (parts.length >= 2) {
+      parts[0] = 'auth';
+    } else {
+      parts.unshift('auth');
+    }
+    return `${window.location.protocol}//${parts.join('.')}`;
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -547,25 +585,153 @@ export function SettingsWindow() {
           {/* Wallet Tab */}
           <TabPanel value={activeTab} index={4}>
             <Stack spacing={3}>
+              {/* Encryption Status Card */}
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring" }}
               >
-                <Box sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-                  <Fingerprint sx={{ fontSize: 64, color: 'secondary.main', mb: 2 }} />
-                  <Typography variant="h5" gutterBottom fontWeight={700}>Wallet Connected</Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontFamily: 'monospace', bgcolor: alpha(theme.palette.text.primary, 0.1), p: 1, borderRadius: 1, display: 'inline-block' }}>
-                    0x71C...9A23
-                  </Typography>
-                  <Box>
-                    <Button variant="outlined" color="error">
-                      Disconnect Wallet
-                    </Button>
-                  </Box>
+                <Box sx={{ 
+                  p: 4, 
+                  bgcolor: isEncryptionReady 
+                    ? alpha(theme.palette.success.main, 0.1) 
+                    : alpha(theme.palette.warning.main, 0.1), 
+                  borderRadius: 2, 
+                  border: '1px solid', 
+                  borderColor: isEncryptionReady 
+                    ? alpha(theme.palette.success.main, 0.3)
+                    : alpha(theme.palette.warning.main, 0.3), 
+                  textAlign: 'center' 
+                }}>
+                  {isEncryptionReady ? (
+                    <>
+                      <Lock sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                      <Typography variant="h5" gutterBottom fontWeight={700} color="success.main">
+                        Encryption Active
+                      </Typography>
+                      <Chip 
+                        icon={<CheckCircle />}
+                        label={`${encryptionWalletAddress?.slice(0, 6)}...${encryptionWalletAddress?.slice(-4)}`}
+                        color="success"
+                        variant="outlined"
+                        sx={{ mb: 3, fontFamily: 'monospace' }}
+                      />
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Your messages are encrypted with your wallet. Only you can read them.
+                      </Typography>
+                      <Button 
+                        variant="outlined" 
+                        color="error"
+                        onClick={clearEncryption}
+                      >
+                        Disconnect Encryption
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <LockOpen sx={{ fontSize: 64, color: 'warning.main', mb: 2 }} />
+                      <Typography variant="h5" gutterBottom fontWeight={700}>
+                        Encryption Not Enabled
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Enable wallet-based encryption to send and receive encrypted messages.
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        color="secondary"
+                        onClick={() => setShowEncryptionPrompt(true)}
+                        disabled={isInitializing}
+                        startIcon={<AccountBalanceWallet />}
+                      >
+                        Enable Encryption
+                      </Button>
+                    </>
+                  )}
                 </Box>
               </motion.div>
+
+              <Divider />
+
+              {/* Wallet Management Section */}
+              <Box>
+                <Typography variant="overline" color="text.secondary" fontWeight={700} gutterBottom>
+                  WALLET MANAGEMENT
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Manage your connected wallets in the Tenchat Auth portal.
+                </Typography>
+                <motion.div whileHover={whileHover} whileTap={whileTap}>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    fullWidth
+                    endIcon={<OpenInNew />}
+                    onClick={() => window.open(`${getAuthUrl()}/settings/wallets`, '_blank')}
+                    sx={{ justifyContent: 'space-between', py: 1.5 }}
+                  >
+                    Open Wallet Settings
+                  </Button>
+                </motion.div>
+              </Box>
+
+              {/* Security Info */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  bgcolor: alpha(theme.palette.info.main, 0.05),
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.info.main, 0.2),
+                  borderRadius: 2,
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Security sx={{ color: 'info.main', mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      How Wallet Encryption Works
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" component="div">
+                      • Your encryption key is derived from a wallet signature<br />
+                      • The same wallet always produces the same key<br />
+                      • No passwords or recovery phrases needed<br />
+                      • Keys never leave your device<br />
+                      • Switch devices? Just sign again with the same wallet
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+
+              {/* Link to Auth App */}
+              <List disablePadding>
+                <MotionListItem
+                  button
+                  onClick={() => window.open(`${getAuthUrl()}/settings`, '_blank')}
+                >
+                  <ListItemText 
+                    primary="Account Settings" 
+                    secondary="Manage your Tenchat account in the Auth portal" 
+                  />
+                  <OpenInNew sx={{ color: 'text.secondary' }} />
+                </MotionListItem>
+                <MotionListItem
+                  button
+                  onClick={() => window.open(`${getAuthUrl()}/settings/security`, '_blank')}
+                >
+                  <ListItemText 
+                    primary="Security Settings" 
+                    secondary="Two-factor authentication, sessions, and more" 
+                  />
+                  <OpenInNew sx={{ color: 'text.secondary' }} />
+                </MotionListItem>
+              </List>
             </Stack>
+
+            {/* Encryption Prompt Dialog */}
+            <EncryptionPromptDialog 
+              open={showEncryptionPrompt} 
+              onClose={() => setShowEncryptionPrompt(false)} 
+            />
           </TabPanel>
 
           {/* Extensions Tab */}

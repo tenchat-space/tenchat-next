@@ -7,6 +7,7 @@ import { ContextMenuProvider } from "@/contexts/ContextMenuContext";
 import { AnimationProvider } from "@/contexts/AnimationContext";
 import { StyleProvider } from "@/contexts/StyleContext";
 import { WindowSystem } from "@/components/window/WindowSystem";
+import { WalletEncryptionProvider } from "@/contexts/WalletEncryptionContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,11 +36,13 @@ export default function RootLayout({
           <TenchatThemeProvider>
             <AnimationProvider>
               <AppwriteProvider>
-                <ContextMenuProvider>
-                  <WindowSystem>
-                    {children}
-                  </WindowSystem>
-                </ContextMenuProvider>
+                <WalletEncryptionProvider>
+                  <ContextMenuProvider>
+                    <WindowSystem>
+                      {children}
+                    </WindowSystem>
+                  </ContextMenuProvider>
+                </WalletEncryptionProvider>
               </AppwriteProvider>
             </AnimationProvider>
           </TenchatThemeProvider>
