@@ -84,7 +84,7 @@ export function WalletEncryptionProvider({ children }: WalletEncryptionProviderP
       const user = await account.get();
       const walletEth = user.prefs?.walletEth || null;
       setConnectedWalletAddress(walletEth);
-    } catch (_err) {
+    } catch {
       // User not logged in or error
       setConnectedWalletAddress(null);
     }

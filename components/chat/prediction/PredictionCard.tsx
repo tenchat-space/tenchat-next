@@ -25,10 +25,11 @@ import { useTheme, alpha } from '@mui/material/styles';
 interface PredictionCardProps {
   market: PredictionMarket;
   onBet?: (optionId: string, amount: number) => void;
+  /** Reserved for future use */
   isSelf?: boolean;
 }
 
-export function PredictionCard({ market, onBet, isSelf: _isSelf }: PredictionCardProps) {
+export function PredictionCard({ market, onBet }: PredictionCardProps) {
   const theme = useTheme();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [betAmount, setBetAmount] = useState('');

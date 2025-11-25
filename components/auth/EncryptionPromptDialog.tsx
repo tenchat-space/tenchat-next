@@ -9,7 +9,7 @@
  * 2. If wallet connected, prompt to sign for encryption key derivation
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -56,20 +56,19 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
     signingMessage 
   } = useWalletEncryption();
   
-  // Calculate initial step based on wallet connection and dialog open state
-  const initialStep = hasWalletConnected ? 1 : 0;
-  const [activeStep, setActiveStep] = useState(initialStep);
+  const [activeStep, setActiveStep] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
+  const prevOpenRef = useRef(open);
 
-  // Reset step when dialog opens
-  const prevOpenRef = React.useRef(open);
-  if (open && !prevOpenRef.current) {
-    // Dialog just opened, reset to initial step
-    if (activeStep !== initialStep) {
+  // Reset step when dialog opens - proper useEffect pattern
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      // Dialog just opened, reset to initial step
+      const initialStep = hasWalletConnected ? 1 : 0;
       setActiveStep(initialStep);
     }
-  }
-  prevOpenRef.current = open;
+    prevOpenRef.current = open;
+  }, [open, hasWalletConnected]);
 
   const steps = hasWalletConnected 
     ? ['Sign Message', 'Encryption Active']

@@ -125,12 +125,12 @@ export function useConversations(userId: string, options?: { userName?: string }
   }, [ensureSelfConversation]);
 
   // Pin/Mute not yet implemented in chatService, keeping placeholders or removing
-  const pinConversation = useCallback(async (_conversationId: string, _userId: string) => {
+  const pinConversation = useCallback(async () => {
     // TODO: Implement in chatService
     console.warn('pinConversation not implemented');
   }, []);
 
-  const muteConversation = useCallback(async (_conversationId: string, _userId: string) => {
+  const muteConversation = useCallback(async () => {
     // TODO: Implement in chatService
     console.warn('muteConversation not implemented');
   }, []);
