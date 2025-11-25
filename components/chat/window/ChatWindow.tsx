@@ -23,13 +23,17 @@ import {
   Check,
   DoneAll,
   Image as ImageIcon,
+  TrendingUp,
 } from "@mui/icons-material";
 import { Conversation, useMessages } from "@/hooks/useMessaging";
 import { storageService } from "@/lib/appwrite/services/storage.service";
 import { BUCKET_IDS } from "@/lib/appwrite/config/constants";
 import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRenderer";
 import { useTheme, alpha } from '@mui/material/styles';
-import type { MessagesContentType } from "@/types/appwrite.d";
+import { PredictionCard } from "@/components/chat/prediction/PredictionCard";
+import { CreatePredictionDialog } from "@/components/chat/dialogs/CreatePredictionDialog";
+import { MessagesContentType } from "@/types/appwrite.d";
+import { PredictionMarket } from "@/types/prediction";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -47,6 +51,7 @@ export function ChatWindow({
   const { messages, isLoading, sendMessage } = useMessages(conversation?.$id || "");
   const [composer, setComposer] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [createPredictionOpen, setCreatePredictionOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme();
 
@@ -88,6 +93,19 @@ export function ChatWindow({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleCreatePrediction = async (marketData: Partial<PredictionMarket>) => {
+    if (!conversation) return;
+    try {
+      await sendMessage({
+        content: "New Prediction Market",
+        type: MessagesContentType.PREDICTION,
+        metadata: marketData as Record<string, unknown>
+      });
+    } catch (error) {
+      console.error("Failed to create prediction", error);
     }
   };
 
@@ -238,6 +256,12 @@ export function ChatWindow({
                             }
                           }}
                         />
+                      ) : message.contentType === MessagesContentType.PREDICTION && message.metadata ? (
+                        <PredictionCard 
+                          market={typeof message.metadata === 'string' ? JSON.parse(message.metadata) : message.metadata} 
+                          onBet={(optionId, amount) => console.log('Bet placed:', optionId, amount)}
+                          isSelf={isSelf}
+                        />
                       ) : (
                         <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
                           {message.content}
@@ -280,6 +304,14 @@ export function ChatWindow({
               onClick={() => fileInputRef.current?.click()}
             >
               {isUploading ? <CircularProgress size={24} color="inherit" /> : <AttachFile />}
+            </IconButton>
+
+            <IconButton
+              color="secondary"
+              disabled={!conversation}
+              onClick={() => setCreatePredictionOpen(true)}
+            >
+              <TrendingUp />
             </IconButton>
             
             <TextField
@@ -344,6 +376,12 @@ export function ChatWindow({
           </Stack>
         </Box>
       </Box>
+
+      <CreatePredictionDialog 
+        open={createPredictionOpen} 
+        onClose={() => setCreatePredictionOpen(false)} 
+        onCreate={handleCreatePrediction} 
+      />
     </Box>
   );
 }
