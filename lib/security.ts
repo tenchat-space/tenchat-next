@@ -127,21 +127,21 @@ export class SecurityService {
     const salt = toBytes(keccak256(toBytes(ENCRYPTION_KEY_MESSAGE)));
     const info = new TextEncoder().encode('tenchat-e2ee-v1');
     
-    // Import signature as key material
+    // Import signature as key material - cast to ArrayBuffer for TypeScript
     const keyMaterial = await window.crypto.subtle.importKey(
       'raw',
-      signatureBytes,
+      signatureBytes.buffer as ArrayBuffer,
       'HKDF',
       false,
       ['deriveBits']
     );
     
-    // Derive 256 bits (32 bytes) for AES-256
+    // Derive 256 bits (32 bytes) for AES-256 - cast buffers for TypeScript
     const derivedBits = await window.crypto.subtle.deriveBits(
       {
         name: 'HKDF',
-        salt: salt,
-        info: info,
+        salt: salt.buffer as ArrayBuffer,
+        info: info.buffer as ArrayBuffer,
         hash: 'SHA-256'
       },
       keyMaterial,
