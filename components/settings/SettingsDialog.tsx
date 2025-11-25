@@ -34,14 +34,12 @@ import {
   NotificationsNone,
   PaletteOutlined,
   Edit,
-  Fingerprint,
   AccountBalanceWallet,
   Extension,
   Lock,
   LockOpen,
   OpenInNew,
-  CheckCircle,
-  Warning
+  CheckCircle
 } from '@mui/icons-material';
 import { useAppwrite } from '@/contexts/AppwriteContext';
 import { useAnimationContext } from '@/contexts/AnimationContext';
@@ -93,7 +91,13 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const MotionListItem = ({ children, ...props }: any) => {
+interface MotionListItemProps {
+  children?: React.ReactNode;
+  button?: boolean;
+  onClick?: () => void;
+}
+
+const MotionListItem = ({ children, button, onClick, ...props }: MotionListItemProps) => {
   const { whileHover, whileTap } = useVisualFeedback();
   const theme = useTheme();
   const paperBg = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.25 : 0.75);
@@ -101,7 +105,12 @@ const MotionListItem = ({ children, ...props }: any) => {
   return (
     <motion.div whileHover={whileHover} whileTap={whileTap}>
       <Paper elevation={0} sx={{ mb: 1, bgcolor: paperBg, borderRadius: 2, overflow: 'hidden' }}>
-        <ListItem {...props}>
+        <ListItem 
+          component={button ? 'div' : undefined}
+          onClick={onClick}
+          sx={button ? { cursor: 'pointer' } : undefined}
+          {...props}
+        >
           {children}
         </ListItem>
       </Paper>
@@ -120,13 +129,10 @@ export function SettingsWindow() {
   const theme = useTheme();
   const { 
     isEncryptionReady, 
-    encryptionWalletAddress,
     hasWalletConnected,
     connectedWalletAddress,
     connectWallet,
     disconnectWallet,
-    initializeEncryption, 
-    clearEncryption,
     isInitializing,
     isConnectingWallet
   } = useWalletEncryption();

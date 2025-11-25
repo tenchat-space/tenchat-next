@@ -13,8 +13,8 @@ import {
   InputAdornment,
   MenuItem
 } from '@mui/material';
-import { Add, Delete, AccessTime } from '@mui/icons-material';
-import { PredictionMarket, PredictionOption } from '@/types/prediction';
+import { Add, Delete } from '@mui/icons-material';
+import { PredictionMarket } from '@/types/prediction';
 
 interface CreatePredictionDialogProps {
   open: boolean;

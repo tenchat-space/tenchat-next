@@ -6,9 +6,7 @@ import {
   Typography,
   Button,
   Stack,
-  LinearProgress,
   Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,10 +17,9 @@ import {
 import {
   TrendingUp,
   AccessTime,
-  CheckCircle,
-  Cancel
+  CheckCircle
 } from '@mui/icons-material';
-import { PredictionMarket, PredictionOption } from '@/types/prediction';
+import { PredictionMarket } from '@/types/prediction';
 import { useTheme, alpha } from '@mui/material/styles';
 
 interface PredictionCardProps {
@@ -31,7 +28,7 @@ interface PredictionCardProps {
   isSelf?: boolean;
 }
 
-export function PredictionCard({ market, onBet, isSelf }: PredictionCardProps) {
+export function PredictionCard({ market, onBet, isSelf: _isSelf }: PredictionCardProps) {
   const theme = useTheme();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [betAmount, setBetAmount] = useState('');
@@ -171,7 +168,7 @@ export function PredictionCard({ market, onBet, isSelf }: PredictionCardProps) {
         <DialogTitle>Place Bet</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            How much do you want to bet on "{market.options.find(o => o.id === selectedOption)?.text}"?
+            How much do you want to bet on &ldquo;{market.options.find(o => o.id === selectedOption)?.text}&rdquo;?
           </Typography>
           <TextField
             autoFocus

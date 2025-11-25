@@ -1,6 +1,9 @@
 
 import { SignalingService } from '@/lib/network/signaling';
 
+// Event listener type for meeting events
+type MeetingEventCallback = (...args: unknown[]) => void;
+
 export class MeetingService {
   private signaling: SignalingService;
   private peerConnection: RTCPeerConnection | null = null;
@@ -8,28 +11,28 @@ export class MeetingService {
   private remoteStream: MediaStream | null = null;
   private roomId: string | null = null;
   private userId: string;
-  private listeners: Map<string, ((...args: any[]) => void)[]> = new Map();
+  private listeners: Map<string, MeetingEventCallback[]> = new Map();
 
   constructor() {
     this.signaling = new SignalingService();
     this.userId = `user-${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  on(event: string, callback: (...args: any[]) => void) {
+  on(event: string, callback: MeetingEventCallback) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)?.push(callback);
   }
 
-  off(event: string, callback: (...args: any[]) => void) {
+  off(event: string, callback: MeetingEventCallback) {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       this.listeners.set(event, callbacks.filter(cb => cb !== callback));
     }
   }
 
-  private emit(event: string, ...args: any[]) {
+  private emit(event: string, ...args: unknown[]) {
     this.listeners.get(event)?.forEach(cb => cb(...args));
   }
 

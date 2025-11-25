@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import {
   Box,
   Button,
-  Divider,
   IconButton,
   Paper,
   Stack,
@@ -21,11 +20,8 @@ import {
   MoreVert,
   Send,
   VideoCall,
-  Check,
   DoneAll,
-  Image as ImageIcon,
   TrendingUp,
-  Lock,
   LockOpen,
 } from "@mui/icons-material";
 import { Conversation, useMessages } from "@/hooks/useMessaging";
@@ -62,7 +58,7 @@ export function ChatWindow({
   const theme = useTheme();
   
   // Wallet encryption state
-  const { isEncryptionReady, encryptionWalletAddress, hasWalletConnected } = useWalletEncryption();
+  const { isEncryptionReady, hasWalletConnected } = useWalletEncryption();
 
   // Check if chat functionality is available (need both auth and encryption)
   const canChat = isAuthenticated && isEncryptionReady;

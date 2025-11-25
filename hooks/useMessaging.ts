@@ -125,12 +125,12 @@ export function useConversations(userId: string, options?: { userName?: string }
   }, [ensureSelfConversation]);
 
   // Pin/Mute not yet implemented in chatService, keeping placeholders or removing
-  const pinConversation = useCallback(async (conversationId: string, userId: string) => {
+  const pinConversation = useCallback(async (_conversationId: string, _userId: string) => {
     // TODO: Implement in chatService
     console.warn('pinConversation not implemented');
   }, []);
 
-  const muteConversation = useCallback(async (conversationId: string, userId: string) => {
+  const muteConversation = useCallback(async (_conversationId: string, _userId: string) => {
     // TODO: Implement in chatService
     console.warn('muteConversation not implemented');
   }, []);
@@ -172,8 +172,6 @@ export function useMessages(conversationId: string) {
 
     // Subscribe to real-time message updates
     const unsubscribe = realtimeService.subscribeToMessages<ChatMessage>(conversationId, (event) => {
-      const message = event.payload;
-      
       // We need to decrypt real-time messages too!
       // This is tricky because the payload comes encrypted.
       // We might need to handle decryption here or in the service.

@@ -56,19 +56,20 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
     signingMessage 
   } = useWalletEncryption();
   
-  const [activeStep, setActiveStep] = useState(0);
+  // Calculate initial step based on wallet connection and dialog open state
+  const initialStep = hasWalletConnected ? 1 : 0;
+  const [activeStep, setActiveStep] = useState(initialStep);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // Determine initial step based on wallet connection status
-  useEffect(() => {
-    if (open) {
-      if (hasWalletConnected) {
-        setActiveStep(1); // Skip to sign step
-      } else {
-        setActiveStep(0); // Start with connect wallet
-      }
+  // Reset step when dialog opens
+  const prevOpenRef = React.useRef(open);
+  if (open && !prevOpenRef.current) {
+    // Dialog just opened, reset to initial step
+    if (activeStep !== initialStep) {
+      setActiveStep(initialStep);
     }
-  }, [open, hasWalletConnected]);
+  }
+  prevOpenRef.current = open;
 
   const steps = hasWalletConnected 
     ? ['Sign Message', 'Encryption Active']
@@ -243,7 +244,7 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
             }}
           >
             <Typography variant="subtitle2" color="warning.main" fontWeight={600} gutterBottom>
-              What you'll sign:
+              What you&apos;ll sign:
             </Typography>
             <Typography
               variant="caption"

@@ -57,10 +57,13 @@ export function useMeeting(meetId: string) {
 
     meetingService.on('remote-stream', handleRemoteStream);
 
-    // Check if stream already exists
+    // Check if stream already exists - use microtask to avoid synchronous setState
     const currentRemote = meetingService.getRemoteStream();
     if (currentRemote) {
-      setRemoteStream(currentRemote);
+      // Use queueMicrotask to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setRemoteStream(currentRemote);
+      });
     }
 
     return () => {
