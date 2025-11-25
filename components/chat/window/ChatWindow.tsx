@@ -32,7 +32,7 @@ import { ExtensionSlotRenderer } from "@/components/extensions/ExtensionSlotRend
 import { useTheme, alpha } from '@mui/material/styles';
 import { PredictionCard } from "@/components/chat/prediction/PredictionCard";
 import { CreatePredictionDialog } from "@/components/chat/dialogs/CreatePredictionDialog";
-import { MessagesContentType } from "@/types/appwrite.d";
+import type { MessagesContentType } from "@/types/appwrite.d";
 import { PredictionMarket } from "@/types/prediction";
 
 interface ChatWindowProps {
@@ -101,7 +101,7 @@ export function ChatWindow({
     try {
       await sendMessage({
         content: "New Prediction Market",
-        type: MessagesContentType.PREDICTION,
+        type: 'prediction' as MessagesContentType,
         metadata: marketData as Record<string, unknown>
       });
     } catch (error) {
@@ -256,7 +256,7 @@ export function ChatWindow({
                             }
                           }}
                         />
-                      ) : message.contentType === MessagesContentType.PREDICTION && message.metadata ? (
+                      ) : message.contentType === ('prediction' as MessagesContentType) && message.metadata ? (
                         <PredictionCard 
                           market={typeof message.metadata === 'string' ? JSON.parse(message.metadata) : message.metadata} 
                           onBet={(optionId, amount) => console.log('Bet placed:', optionId, amount)}
