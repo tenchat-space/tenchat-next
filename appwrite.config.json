@@ -2905,7 +2905,8 @@
                         "reply",
                         "forward",
                         "story_reply",
-                        "game"
+                        "game",
+                        "prediction"
                     ],
                     "format": "enum",
                     "default": null
