@@ -14,7 +14,7 @@
  * 4. No server-side key storage needed
  */
 
-import { keccak256, toBytes, recoverPublicKey, type Hex } from 'viem';
+import { keccak256, toBytes, type Hex } from 'viem';
 
 // Deterministic message for key derivation - DO NOT CHANGE after production launch
 // Changing this would invalidate all existing encrypted messages
