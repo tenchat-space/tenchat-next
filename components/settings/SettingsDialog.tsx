@@ -25,7 +25,8 @@ import {
   SelectChangeEvent,
   Paper,
   alpha,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import {
   PersonOutline,
@@ -119,10 +120,15 @@ export function SettingsWindow() {
   const theme = useTheme();
   const { 
     isEncryptionReady, 
-    encryptionWalletAddress, 
+    encryptionWalletAddress,
+    hasWalletConnected,
+    connectedWalletAddress,
+    connectWallet,
+    disconnectWallet,
     initializeEncryption, 
     clearEncryption,
-    isInitializing 
+    isInitializing,
+    isConnectingWallet
   } = useWalletEncryption();
   const [showEncryptionPrompt, setShowEncryptionPrompt] = useState(false);
 
@@ -585,7 +591,7 @@ export function SettingsWindow() {
           {/* Wallet Tab */}
           <TabPanel value={activeTab} index={4}>
             <Stack spacing={3}>
-              {/* Encryption Status Card */}
+              {/* Wallet Connection Status Card */}
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -593,62 +599,122 @@ export function SettingsWindow() {
               >
                 <Box sx={{ 
                   p: 4, 
-                  bgcolor: isEncryptionReady 
+                  bgcolor: hasWalletConnected 
                     ? alpha(theme.palette.success.main, 0.1) 
                     : alpha(theme.palette.warning.main, 0.1), 
                   borderRadius: 2, 
                   border: '1px solid', 
-                  borderColor: isEncryptionReady 
+                  borderColor: hasWalletConnected 
                     ? alpha(theme.palette.success.main, 0.3)
-                    : alpha(theme.palette.warning.main, 0.3), 
-                  textAlign: 'center' 
+                    : alpha(theme.palette.warning.main, 0.3),
                 }}>
-                  {isEncryptionReady ? (
-                    <>
-                      <Lock sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-                      <Typography variant="h5" gutterBottom fontWeight={700} color="success.main">
-                        Encryption Active
+                  <Stack direction="row" spacing={2} alignItems="flex-start">
+                    <AccountBalanceWallet sx={{ 
+                      fontSize: 40, 
+                      color: hasWalletConnected ? 'success.main' : 'warning.main' 
+                    }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" fontWeight={700} gutterBottom>
+                        {hasWalletConnected ? 'Wallet Connected' : 'No Wallet Connected'}
                       </Typography>
-                      <Chip 
-                        icon={<CheckCircle />}
-                        label={`${encryptionWalletAddress?.slice(0, 6)}...${encryptionWalletAddress?.slice(-4)}`}
-                        color="success"
-                        variant="outlined"
-                        sx={{ mb: 3, fontFamily: 'monospace' }}
-                      />
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Your messages are encrypted with your wallet. Only you can read them.
-                      </Typography>
+                      {connectedWalletAddress ? (
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontFamily: 'monospace', 
+                            color: 'text.secondary',
+                            wordBreak: 'break-all' 
+                          }}
+                        >
+                          {connectedWalletAddress}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Connect a wallet to enable encrypted messaging.
+                        </Typography>
+                      )}
+                    </Box>
+                    {hasWalletConnected ? (
                       <Button 
                         variant="outlined" 
                         color="error"
-                        onClick={clearEncryption}
+                        size="small"
+                        onClick={disconnectWallet}
+                        disabled={isConnectingWallet}
                       >
-                        Disconnect Encryption
+                        {isConnectingWallet ? 'Disconnecting...' : 'Disconnect'}
                       </Button>
-                    </>
-                  ) : (
-                    <>
-                      <LockOpen sx={{ fontSize: 64, color: 'warning.main', mb: 2 }} />
-                      <Typography variant="h5" gutterBottom fontWeight={700}>
-                        Encryption Not Enabled
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Enable wallet-based encryption to send and receive encrypted messages.
-                      </Typography>
+                    ) : (
                       <Button 
                         variant="contained" 
                         color="secondary"
-                        onClick={() => setShowEncryptionPrompt(true)}
-                        disabled={isInitializing}
-                        startIcon={<AccountBalanceWallet />}
+                        onClick={connectWallet}
+                        disabled={isConnectingWallet}
+                        startIcon={isConnectingWallet ? <CircularProgress size={16} color="inherit" /> : <AccountBalanceWallet />}
                       >
-                        Enable Encryption
+                        {isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}
                       </Button>
-                    </>
-                  )}
+                    )}
+                  </Stack>
                 </Box>
               </motion.div>
+
+              {/* Encryption Status Card - Only show if wallet is connected */}
+              {hasWalletConnected && (
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", delay: 0.1 }}
+                >
+                  <Box sx={{ 
+                    p: 4, 
+                    bgcolor: isEncryptionReady 
+                      ? alpha(theme.palette.success.main, 0.1) 
+                      : alpha(theme.palette.info.main, 0.1), 
+                    borderRadius: 2, 
+                    border: '1px solid', 
+                    borderColor: isEncryptionReady 
+                      ? alpha(theme.palette.success.main, 0.3)
+                      : alpha(theme.palette.info.main, 0.3),
+                  }}>
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      {isEncryptionReady ? (
+                        <Lock sx={{ fontSize: 40, color: 'success.main' }} />
+                      ) : (
+                        <LockOpen sx={{ fontSize: 40, color: 'info.main' }} />
+                      )}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" fontWeight={700} gutterBottom>
+                          {isEncryptionReady ? 'Encryption Active' : 'Encryption Not Enabled'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {isEncryptionReady 
+                            ? 'Your messages are end-to-end encrypted with your wallet.'
+                            : 'Sign a message with your wallet to enable encrypted messaging.'}
+                        </Typography>
+                      </Box>
+                      {isEncryptionReady ? (
+                        <Chip 
+                          icon={<CheckCircle />}
+                          label="Active"
+                          color="success"
+                          variant="outlined"
+                        />
+                      ) : (
+                        <Button 
+                          variant="contained" 
+                          color="secondary"
+                          onClick={() => setShowEncryptionPrompt(true)}
+                          disabled={isInitializing}
+                          startIcon={<Lock />}
+                        >
+                          Enable Encryption
+                        </Button>
+                      )}
+                    </Stack>
+                  </Box>
+                </motion.div>
+              )}
 
               <Divider />
 
@@ -666,10 +732,10 @@ export function SettingsWindow() {
                     color="secondary"
                     fullWidth
                     endIcon={<OpenInNew />}
-                    onClick={() => window.open(`${getAuthUrl()}/settings/wallets`, '_blank')}
+                    onClick={() => window.open(`${getAuthUrl()}/settings`, '_blank')}
                     sx={{ justifyContent: 'space-between', py: 1.5 }}
                   >
-                    Open Wallet Settings
+                    Open Auth Settings
                   </Button>
                 </motion.div>
               </Box>
@@ -692,10 +758,10 @@ export function SettingsWindow() {
                       How Wallet Encryption Works
                     </Typography>
                     <Typography variant="caption" color="text.secondary" component="div">
-                      • Your encryption key is derived from a wallet signature<br />
+                      • Your wallet is stored in your Tenchat account<br />
+                      • Encryption key is derived from a wallet signature<br />
                       • The same wallet always produces the same key<br />
                       • No passwords or recovery phrases needed<br />
-                      • Keys never leave your device<br />
                       • Switch devices? Just sign again with the same wallet
                     </Typography>
                   </Box>
@@ -716,11 +782,11 @@ export function SettingsWindow() {
                 </MotionListItem>
                 <MotionListItem
                   button
-                  onClick={() => window.open(`${getAuthUrl()}/settings/security`, '_blank')}
+                  onClick={() => window.open(`${getAuthUrl()}/settings`, '_blank')}
                 >
                   <ListItemText 
                     primary="Security Settings" 
-                    secondary="Two-factor authentication, sessions, and more" 
+                    secondary="Passkeys, sessions, and connected wallets" 
                   />
                   <OpenInNew sx={{ color: 'text.secondary' }} />
                 </MotionListItem>

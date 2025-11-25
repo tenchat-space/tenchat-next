@@ -62,7 +62,7 @@ export function ChatWindow({
   const theme = useTheme();
   
   // Wallet encryption state
-  const { isEncryptionReady, encryptionWalletAddress } = useWalletEncryption();
+  const { isEncryptionReady, encryptionWalletAddress, hasWalletConnected } = useWalletEncryption();
 
   // Check if chat functionality is available (need both auth and encryption)
   const canChat = isAuthenticated && isEncryptionReady;
@@ -224,12 +224,14 @@ export function ChatWindow({
                 onClick={() => setEncryptionPromptOpen(true)}
                 sx={{ fontWeight: 600 }}
               >
-                Enable Now
+                {hasWalletConnected ? 'Enable Encryption' : 'Connect Wallet'}
               </Button>
             }
             sx={{ borderRadius: 0 }}
           >
-            Wallet encryption is not enabled. Enable it to send and receive encrypted messages.
+            {hasWalletConnected 
+              ? 'Wallet connected but encryption not enabled. Enable it to send encrypted messages.'
+              : 'No wallet connected. Connect a wallet to enable encrypted messaging.'}
           </Alert>
         )}
         
