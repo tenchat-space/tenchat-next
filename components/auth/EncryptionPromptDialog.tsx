@@ -9,7 +9,7 @@
  * 2. If wallet connected, prompt to sign for encryption key derivation
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -58,17 +58,13 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
   
   const [activeStep, setActiveStep] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
-  const prevOpenRef = useRef(open);
-
-  // Reset step when dialog opens - proper useEffect pattern
-  useEffect(() => {
-    if (open && !prevOpenRef.current) {
-      // Dialog just opened, reset to initial step
-      const initialStep = hasWalletConnected ? 1 : 0;
-      setActiveStep(initialStep);
-    }
-    prevOpenRef.current = open;
-  }, [open, hasWalletConnected]);
+  
+  // Generate a key that changes when dialog opens, forcing component reset
+  const dialogKey = useMemo(() => {
+    return open ? `open-${Date.now()}` : 'closed';
+    // We only want to regenerate key when dialog opens, not closes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open && hasWalletConnected]);
 
   const steps = hasWalletConnected 
     ? ['Sign Message', 'Encryption Active']
@@ -110,6 +106,13 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
       setLocalError(null);
       onClose();
     }
+  };
+
+  // Handle dialog enter - reset step based on wallet status
+  const handleDialogEnter = () => {
+    const initialStep = hasWalletConnected ? 1 : 0;
+    setActiveStep(initialStep);
+    setLocalError(null);
   };
 
   const isLoading = isInitializing || isConnectingWallet;
@@ -304,10 +307,14 @@ export function EncryptionPromptDialog({ open, onClose, onSuccess }: EncryptionP
 
   return (
     <Dialog
+      key={dialogKey}
       open={open}
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      TransitionProps={{
+        onEnter: handleDialogEnter,
+      }}
       PaperProps={{
         sx: {
           borderRadius: 3,
