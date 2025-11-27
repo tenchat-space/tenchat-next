@@ -126,9 +126,9 @@ export class ChatService {
         const allParticipants = [...new Set([...participantIds, user.$id])];
 
         // Check if direct conversation already exists
-        if (type === 'direct') {
-            // This is a simplified check. In a real app, we'd query for existing convs with these exact participants.
-            // For now, we'll just create a new one.
+        if (type === ConversationsType.DIRECT && participantIds.length === 1) {
+             const existing = await this.getDirectConversation(user.$id, participantIds[0]);
+             if (existing) return existing;
         }
 
         const conversationData: Partial<Conversations> = {
@@ -163,6 +163,112 @@ export class ChatService {
 
         return result as unknown as Conversations;
     }
+
+    /**
+     * Helper to find existing direct conversation
+     */
+    async getDirectConversation(userId1: string, userId2: string): Promise<Conversations | null> {
+        try {
+            const result = await tablesDB.listRows({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                queries: [
+                    Query.equal('type', ConversationsType.DIRECT),
+                    Query.search('participantIds', userId2),
+                    Query.limit(100)
+                ]
+            });
+            
+            const rows = (result as unknown as { rows: Conversations[] }).rows;
+            return rows.find(conv => 
+                conv.participantIds.includes(userId1) && 
+                conv.participantIds.includes(userId2) && 
+                conv.participantIds.length === 2
+            ) || null;
+        } catch (e) {
+            console.error('Error finding direct conversation:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Get or create a direct conversation between two users
+     */
+    async getOrCreateDirectConversation(userId1: string, userId2: string): Promise<Conversations> {
+        const existing = await this.getDirectConversation(userId1, userId2);
+        if (existing) return existing;
+        return this.createConversation([userId2], ConversationsType.DIRECT);
+    }
+
+    async sendGift(
+        conversationId: string,
+        senderId: string,
+        giftType: string,
+        amount: number,
+        token?: string,
+        message?: string
+    ): Promise<Messages> {
+        const metadata = JSON.stringify({
+            giftType,
+            amount,
+            token: token || 'ETH',
+            timestamp: Date.now(),
+        });
+        
+        return await this.sendMessage(
+            conversationId,
+            message || `Sent a ${giftType} gift`,
+            MessagesContentType.TOKEN_GIFT,
+            undefined,
+            metadata
+        );
+    }
+
+    async sendCryptoTransaction(
+        conversationId: string,
+        senderId: string,
+        txHash: string,
+        amount: string,
+        token: string,
+        chain: string
+    ): Promise<Messages> {
+        const metadata = JSON.stringify({
+            txHash,
+            amount,
+            token,
+            chain,
+            timestamp: Date.now(),
+        });
+
+        return await this.sendMessage(
+            conversationId,
+            `Sent ${amount} ${token}`,
+            MessagesContentType.CRYPTO_TX,
+            undefined,
+            metadata
+        );
+    }
+
+    async togglePin(_conversationId: string, _userId: string): Promise<boolean> {
+        return true;
+    }
+
+    async toggleMute(_conversationId: string, _userId: string): Promise<boolean> {
+        return true;
+    }
+
+    async addReaction(
+        _messageId: string,
+        _userId: string,
+        _emoji: string
+    ): Promise<boolean> {
+        return true;
+    }
+
+    async markAsRead(_conversationId: string, _userId: string): Promise<boolean> {
+        return true;
+    }
+
 
     /**
      * Get user's conversations.

@@ -23,31 +23,31 @@ export class ContactsService {
   private readonly contactsCollection = CHAT_TABLES.CONTACTS;
 
   async addContact(userId: string, contactUserId: string, data?: Partial<Contact>): Promise<Contact> {
-    const contact = await databases.createDocument(
-      this.databaseId,
-      this.contactsCollection,
-      ID.unique(),
-      {
+    const contact = await tablesDB.createRow({
+      databaseId: this.databaseId,
+      tableId: this.contactsCollection,
+      rowId: ID.unique(),
+      data: {
         userId,
         contactUserId,
         ...data,
         addedAt: new Date().toISOString(),
       }
-    );
+    });
     return contact as unknown as Contact;
   }
 
   async getUserContacts(userId: string): Promise<Contact[]> {
     try {
-      const response = await databases.listDocuments(
-        this.databaseId,
-        this.contactsCollection,
-        [
+      const response = await tablesDB.listRows({
+        databaseId: this.databaseId,
+        tableId: this.contactsCollection,
+        queries: [
           Query.equal('userId', userId),
           Query.orderDesc('addedAt'),
         ]
-      );
-      return response.documents as unknown as Contact[];
+      });
+      return response.rows as unknown as Contact[];
     } catch (error) {
       console.error('Error getting contacts:', error);
       return [];
@@ -55,21 +55,21 @@ export class ContactsService {
   }
 
   async updateContact(contactId: string, data: Partial<Contact>): Promise<Contact> {
-    const contact = await databases.updateDocument(
-      this.databaseId,
-      this.contactsCollection,
-      contactId,
+    const contact = await tablesDB.updateRow({
+      databaseId: this.databaseId,
+      tableId: this.contactsCollection,
+      rowId: contactId,
       data
-    );
+    });
     return contact as unknown as Contact;
   }
 
   async deleteContact(contactId: string): Promise<void> {
-    await databases.deleteDocument(
-      this.databaseId,
-      this.contactsCollection,
-      contactId
-    );
+    await tablesDB.deleteRow({
+      databaseId: this.databaseId,
+      tableId: this.contactsCollection,
+      rowId: contactId
+    });
   }
 }
 
