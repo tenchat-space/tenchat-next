@@ -10,6 +10,8 @@ export const getThemeOptions = (mode: 'light' | 'dark', paletteId: string = 'def
       mode,
       ...p,
       divider: mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+      // Add custom brand palette to MUI theme if we extend the type
+      // For now, it's accessible via the 'p' variable in overrides
     },
     typography: {
       fontFamily: 'var(--font-geist-sans, "Inter", system-ui, sans-serif)',
@@ -107,43 +109,56 @@ export const getThemeOptions = (mode: 'light' | 'dark', paletteId: string = 'def
           },
         },
       },
-      MuiListItemButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: 16,
-            margin: '4px 8px',
-            padding: '12px 16px',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            border: '1px solid transparent',
-            '&:hover': {
-              backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
-              borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              transform: 'scale(1.01)',
-            },
-            '&.Mui-selected': {
-              backgroundColor: `${p.primary.main}1f`, // 12% opacity
-              borderColor: `${p.primary.main}4d`, // 30% opacity
-              boxShadow: `0 4px 20px ${p.primary.main}26`, // 15% opacity
-              '&:hover': {
-                backgroundColor: `${p.primary.main}2e`, // 18% opacity
+          MuiListItemButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 16,
+                margin: '4px 8px',
+                padding: '12px 16px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                border: '1px solid transparent',
+                '&:hover': {
+                  backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+                  borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                  transform: 'scale(1.01)',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: `${p.primary.main}1f`, // 12% opacity
+                  borderColor: `${p.primary.main}4d`, // 30% opacity
+                  boxShadow: `0 4px 20px ${p.primary.main}26`, // 15% opacity
+                  '&:hover': {
+                    backgroundColor: `${p.primary.main}2e`, // 18% opacity
+                  },
+                  // Brand accent for selected state regardless of theme
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '15%',
+                    bottom: '15%',
+                    width: 4,
+                    borderRadius: '0 4px 4px 0',
+                    background: p.brand?.gradient || p.primary.main,
+                  }
+                },
               },
             },
           },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: 24,
-            background: mode === 'dark' 
-              ? 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
-              : 'linear-gradient(160deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.5) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
-            boxShadow: mode === 'dark' ? '0 8px 32px rgba(0, 0, 0, 0.2)' : '0 8px 32px rgba(0, 0, 0, 0.05)',
+          MuiCard: {
+            styleOverrides: {
+              root: {
+                borderRadius: 24,
+                background: mode === 'dark' 
+                  ? 'linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+                  : 'linear-gradient(160deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.5) 100%)',
+                backdropFilter: 'blur(20px)',
+                border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+                boxShadow: mode === 'dark' ? '0 8px 32px rgba(0, 0, 0, 0.2)' : '0 8px 32px rgba(0, 0, 0, 0.05)',
+                position: 'relative',
+                overflow: 'visible', // Allow glow effects
+              },
+            },
           },
-        },
-      },
       MuiTextField: {
         styleOverrides: {
           root: {

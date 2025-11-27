@@ -39,6 +39,7 @@ export function TenchatThemeProvider({ children }: TenchatThemeProviderProps) {
         MuiPaper: {
           styleOverrides: {
             root: {
+              ...(baseThemeOptions.components?.MuiPaper?.styleOverrides?.root as any),
               backgroundImage: 'none',
               // Use palette color but adjust opacity if needed for glass effect
               backgroundColor: styleConfig.borderStyle === 'glass' 
@@ -85,6 +86,7 @@ export function TenchatThemeProvider({ children }: TenchatThemeProviderProps) {
         MuiCard: {
           styleOverrides: {
             root: {
+              ...(baseThemeOptions.components?.MuiCard?.styleOverrides?.root as any),
               borderRadius: radius,
               backdropFilter: blur,
               boxShadow: shadow,
