@@ -3,7 +3,7 @@
  * Handles gift sending and crypto transfers
  */
 
-import { messagingService } from './messaging.service';
+import { chatService } from './chat';
 
 export interface Gift {
   id: string;
@@ -115,7 +115,7 @@ export class GiftingService {
       throw new Error('Gift not found');
     }
 
-    await messagingService.sendGift(
+    await chatService.sendGift(
       conversationId,
       senderId,
       gift.name,
