@@ -141,8 +141,12 @@ export class SocialService {
   /**
    * Create a post
    */
-  async createPost(data: { userId: string; content: string; mediaUrls?: string[] }): Promise<Posts | null> {
+  async createPost(data: Partial<Posts>): Promise<Posts | null> {
     try {
+      if (!data.userId) {
+        throw new Error('Missing user ID');
+      }
+
       const result = await tablesDB.createRow({
         databaseId: this.databaseId,
         tableId: SOCIAL_COLLECTIONS.POSTS,

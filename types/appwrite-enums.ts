@@ -111,6 +111,14 @@ export const PostsPrivacy = {
 
 export type PostsPrivacy = typeof PostsPrivacy[keyof typeof PostsPrivacy];
 
+export const FollowsStatus = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    BLOCKED: "blocked"
+} as const;
+
+export type FollowsStatus = typeof FollowsStatus[keyof typeof FollowsStatus];
+
 export const WalletsChain = {
     ETHEREUM: "ethereum",
     POLYGON: "polygon",

@@ -124,16 +124,44 @@ export function useConversations(userId: string, options?: { userName?: string }
     }
   }, [ensureSelfConversation]);
 
-  // Pin/Mute not yet implemented in chatService, keeping placeholders or removing
-  const pinConversation = useCallback(async () => {
-    // TODO: Implement in chatService
-    console.warn('pinConversation not implemented');
-  }, []);
+  const pinConversation = useCallback(async (conversationId: string) => {
+    if (!userId) return;
+    try {
+      await chatService.togglePin(conversationId, userId);
+      // Reload or update local state
+      setConversations(prev => 
+        prev.map(c => {
+          if (c.$id !== conversationId) return c;
+          const isPinned = c.isPinned || [];
+          const newPinned = isPinned.includes(userId) 
+            ? isPinned.filter(id => id !== userId) 
+            : [...isPinned, userId];
+          return { ...c, isPinned: newPinned };
+        })
+      );
+    } catch (error) {
+      console.error('Failed to toggle pin', error);
+    }
+  }, [userId]);
 
-  const muteConversation = useCallback(async () => {
-    // TODO: Implement in chatService
-    console.warn('muteConversation not implemented');
-  }, []);
+  const muteConversation = useCallback(async (conversationId: string) => {
+    if (!userId) return;
+    try {
+      await chatService.toggleMute(conversationId, userId);
+      setConversations(prev => 
+        prev.map(c => {
+          if (c.$id !== conversationId) return c;
+          const isMuted = c.isMuted || [];
+          const newMuted = isMuted.includes(userId) 
+            ? isMuted.filter(id => id !== userId) 
+            : [...isMuted, userId];
+          return { ...c, isMuted: newMuted };
+        })
+      );
+    } catch (error) {
+      console.error('Failed to toggle mute', error);
+    }
+  }, [userId]);
 
   return {
     conversations,
@@ -224,15 +252,22 @@ export function useMessages(conversationId: string) {
     }
   }, [conversationId]);
 
-  const addReaction = useCallback(async () => {
-    // TODO: Implement in chatService
-    console.warn('addReaction not implemented');
+  const addReaction = useCallback(async (messageId: string, userId: string, emoji: string) => {
+    try {
+      await chatService.addReaction(messageId, userId, emoji);
+    } catch (error) {
+      console.error('Failed to add reaction', error);
+    }
   }, []);
 
-  const markAsRead = useCallback(async () => {
-    // TODO: Implement in chatService
-    console.warn('markAsRead not implemented');
-  }, []);
+  const markAsRead = useCallback(async (userId: string) => {
+    if (!conversationId) return;
+    try {
+      await chatService.markAsRead(conversationId, userId);
+    } catch (error) {
+      console.error('Failed to mark as read', error);
+    }
+  }, [conversationId]);
 
   return {
     messages,

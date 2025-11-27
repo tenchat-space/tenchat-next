@@ -35,7 +35,9 @@ export function useStories(userId?: string) {
   const createStory = useCallback(async (data: Partial<Stories>) => {
     try {
       const newStory = await socialService.createStory(data);
-      setStories(prev => [newStory, ...prev]);
+      if (newStory) {
+        setStories(prev => [newStory, ...prev]);
+      }
       return newStory;
     } catch (err) {
       setError(err as Error);
@@ -89,7 +91,9 @@ export function usePosts(userId?: string) {
   const createPost = useCallback(async (data: Partial<Posts>) => {
     try {
       const newPost = await socialService.createPost(data);
-      setPosts(prev => [newPost, ...prev]);
+      if (newPost) {
+        setPosts(prev => [newPost, ...prev]);
+      }
       return newPost;
     } catch (err) {
       setError(err as Error);

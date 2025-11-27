@@ -7,7 +7,7 @@ import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, WEB3_COLLECTIONS } from '../config/constants';
 
-type Web3Row = Record<string, any>;
+import type { Wallets, TokenHoldings, Nfts, CryptoTransactions, TokenGifts } from '@/types/appwrite-models';
 
 export class Web3Service {
   private readonly databaseId = DATABASE_IDS.CHAT;
@@ -15,7 +15,7 @@ export class Web3Service {
   /**
    * Get user wallets
    */
-  async getUserWallets(userId: string): Promise<Web3Row[]> {
+  async getUserWallets(userId: string): Promise<Wallets[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -25,7 +25,7 @@ export class Web3Service {
           Query.orderDesc('lastActive')
         ]
       });
-      return response.rows as Web3Row[];
+      return response.rows as unknown as Wallets[];
     } catch (error) {
       console.error('Error getting user wallets:', error);
       return [];
@@ -40,7 +40,7 @@ export class Web3Service {
     address: string,
     chain: string,
     walletType: string
-  ): Promise<Web3Row> {
+  ): Promise<Wallets> {
     try {
       // Check if wallet exists
       const existing = await tablesDB.listRows({
@@ -64,7 +64,7 @@ export class Web3Service {
                 lastActive: new Date().toISOString()
             }
         });
-        return updated as unknown as Web3Row;
+        return updated as unknown as Wallets;
       }
 
       // Create new wallet
@@ -82,7 +82,7 @@ export class Web3Service {
           connectedAt: new Date().toISOString()
         }
       });
-      return newWallet as unknown as Web3Row;
+      return newWallet as unknown as Wallets;
     } catch (error) {
       console.error('Error connecting wallet:', error);
       throw error;
@@ -126,12 +126,12 @@ export class Web3Service {
     }
   }
 
-  async getUserNFTs(_userId: string): Promise<any[]> {
+  async getUserNFTs(_userId: string): Promise<Nfts[]> {
     console.warn('Web3Service: getUserNFTs not implemented. Proposal for NFTs table created.');
     return [];
   }
 
-  async addNFT(_userId: string, _data: Record<string, any>): Promise<any> {
+  async addNFT(_userId: string, _data: Record<string, any>): Promise<Nfts | null> {
     console.warn('Web3Service: addNFT not implemented. Proposal for NFTs table created.');
     return null;
   }
@@ -140,12 +140,12 @@ export class Web3Service {
     console.warn('Web3Service: setNFTAsProfilePicture not implemented. Proposal for NFTs table created.');
   }
 
-  async getUserTransactions(_userId: string): Promise<any[]> {
+  async getUserTransactions(_userId: string): Promise<CryptoTransactions[]> {
     console.warn('Web3Service: getUserTransactions not implemented. Proposal for TRANSACTIONS table created.');
     return [];
   }
 
-  async recordTransaction(_data: Record<string, any>): Promise<any> {
+  async recordTransaction(_data: Record<string, any>): Promise<CryptoTransactions | null> {
     console.warn('Web3Service: recordTransaction not implemented. Proposal for TRANSACTIONS table created.');
     return null;
   }
@@ -154,12 +154,12 @@ export class Web3Service {
     console.warn('Web3Service: updateTransactionStatus not implemented. Proposal for TRANSACTIONS table created.');
   }
 
-  async getPendingGifts(_userId: string): Promise<any[]> {
+  async getPendingGifts(_userId: string): Promise<TokenGifts[]> {
     console.warn('Web3Service: getPendingGifts not implemented. Proposal for TOKEN_GIFTS table created.');
     return [];
   }
 
-  async createGift(_data: Record<string, any>): Promise<any> {
+  async createGift(_data: Record<string, any>): Promise<TokenGifts | null> {
     console.warn('Web3Service: createGift not implemented. Proposal for TOKEN_GIFTS table created.');
     return null;
   }
@@ -171,7 +171,7 @@ export class Web3Service {
   /**
    * Get user holdings
    */
-  async getUserHoldings(userId: string, chain?: string): Promise<Web3Row[]> {
+  async getUserHoldings(userId: string, chain?: string): Promise<TokenHoldings[]> {
     try {
         const queries = [Query.equal('userId', userId)];
         if (chain) queries.push(Query.equal('chain', chain));
@@ -181,7 +181,7 @@ export class Web3Service {
             tableId: WEB3_COLLECTIONS.TOKEN_HOLDINGS,
             queries
         });
-        return response.rows as Web3Row[];
+        return response.rows as unknown as TokenHoldings[];
     } catch (error) {
         console.error('Error getting holdings:', error);
         return [];

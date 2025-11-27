@@ -98,7 +98,9 @@ export function useNFTs(userId: string) {
   const addNFT = useCallback(async (nftData: Partial<Nfts>) => {
     try {
       const newNft = await web3Service.addNFT(userId, nftData);
-      setNfts(prev => [...prev, newNft]);
+      if (newNft) {
+        setNfts(prev => [...prev, newNft]);
+      }
       return newNft;
     } catch (err) {
       setError(err as Error);
@@ -160,7 +162,9 @@ export function useTransactions(userId: string) {
         ...txData,
         userId,
       });
-      setTransactions(prev => [newTx, ...prev]);
+      if (newTx) {
+        setTransactions(prev => [newTx, ...prev]);
+      }
       return newTx;
     } catch (err) {
       setError(err as Error);
@@ -288,7 +292,7 @@ export function useTokenHoldings(userId: string, chain?: string) {
 
   const totalValue = holdings.reduce((sum, h) => {
     const balance = parseFloat(h.balance || '0');
-    const price = h.usdPrice || 0;
+    const price = h.pricePerToken || 0;
     return sum + (balance * price);
   }, 0);
 
