@@ -13,7 +13,6 @@ export * from './appwrite/config/constants';
 export {
   authService,
   userService,
-  messagingService,
   contactsService,
   storageService,
   web3Service,
