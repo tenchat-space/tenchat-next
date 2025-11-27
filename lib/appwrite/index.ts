@@ -33,5 +33,4 @@ export {
   getDatabaseForCollection
 } from './config/constants';
 export type { User } from './services/user.service';
-export type { Conversation, Message } from './services/messaging.service';
 export type { Contact } from './services/contacts.service';

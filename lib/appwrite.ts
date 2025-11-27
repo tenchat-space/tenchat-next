@@ -25,7 +25,6 @@ export {
 export {
   AuthService,
   UserService,
-  MessagingService,
   ContactsService,
   StorageService,
   Web3Service,
@@ -37,8 +36,6 @@ export {
 // Export types
 export type {
   User,
-  Conversation,
-  Message,
   Contact,
 } from './appwrite/services';
 

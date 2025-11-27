@@ -4,7 +4,7 @@
  */
 
 import { ID, Query } from 'appwrite';
-import { databases } from '../config/client';
+import { tablesDB } from '../config/client';
 import { DATABASE_IDS, CHAT_TABLES } from '../config/constants';
 import type { Models } from 'appwrite';
 
