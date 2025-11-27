@@ -249,12 +249,69 @@ export class ChatService {
         );
     }
 
-    async togglePin(_conversationId: string, _userId: string): Promise<boolean> {
-        return true;
+    async togglePin(conversationId: string, userId: string): Promise<boolean> {
+        try {
+            // 1. Get conversation
+            const conversation = await tablesDB.getRow({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                rowId: conversationId
+            }) as unknown as Conversations;
+
+            if (!conversation) return false;
+
+            // 2. Toggle user ID in isPinned array
+            let isPinned = conversation.isPinned || [];
+            if (isPinned.includes(userId)) {
+                isPinned = isPinned.filter(id => id !== userId);
+            } else {
+                isPinned.push(userId);
+            }
+
+            // 3. Update
+            await tablesDB.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                rowId: conversationId,
+                data: { isPinned }
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error toggling pin:', error);
+            return false;
+        }
     }
 
-    async toggleMute(_conversationId: string, _userId: string): Promise<boolean> {
-        return true;
+    async toggleMute(conversationId: string, userId: string): Promise<boolean> {
+        try {
+            const conversation = await tablesDB.getRow({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                rowId: conversationId
+            }) as unknown as Conversations;
+
+            if (!conversation) return false;
+
+            let isMuted = conversation.isMuted || [];
+            if (isMuted.includes(userId)) {
+                isMuted = isMuted.filter(id => id !== userId);
+            } else {
+                isMuted.push(userId);
+            }
+
+            await tablesDB.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.CONVERSATIONS,
+                rowId: conversationId,
+                data: { isMuted }
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error toggling mute:', error);
+            return false;
+        }
     }
 
     async addReaction(
@@ -262,11 +319,43 @@ export class ChatService {
         _userId: string,
         _emoji: string
     ): Promise<boolean> {
-        return true;
+        console.warn('ChatService: addReaction not implemented. Proposal for REACTIONS table created.');
+        return false;
     }
 
-    async markAsRead(_conversationId: string, _userId: string): Promise<boolean> {
-        return true;
+    async markAsRead(conversationId: string, userId: string): Promise<boolean> {
+        // Optimistic implementation: we should ideally update all unread messages
+        // But for performance, we might just want to update a "lastReadAt" on a relation table.
+        // Since we don't have a relation table in CHAT_TABLES, we'll try to update the 'readBy' of the last 20 messages.
+        try {
+            const result = await tablesDB.listRows({
+                databaseId: DATABASE_ID,
+                tableId: TABLES.MESSAGES,
+                queries: [
+                    Query.equal('conversationId', conversationId),
+                    Query.orderDesc('createdAt'),
+                    Query.limit(20)
+                ]
+            });
+            
+            const messages = (result as unknown as { rows: Messages[] }).rows;
+            const unreadMessages = messages.filter(msg => !msg.readBy?.includes(userId));
+
+            await Promise.all(unreadMessages.map(msg => {
+                const readBy = [...(msg.readBy || []), userId];
+                return tablesDB.updateRow({
+                    databaseId: DATABASE_ID,
+                    tableId: TABLES.MESSAGES,
+                    rowId: msg.$id,
+                    data: { readBy }
+                });
+            }));
+
+            return true;
+        } catch (error) {
+            console.error('Error marking as read:', error);
+            return false;
+        }
     }
 
 

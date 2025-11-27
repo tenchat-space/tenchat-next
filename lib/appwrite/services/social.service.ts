@@ -7,7 +7,7 @@ import { ID, Query } from 'appwrite';
 import { tablesDB } from '../config/client';
 import { DATABASE_IDS, SOCIAL_COLLECTIONS } from '../config/constants';
 
-type SocialRow = Record<string, any>;
+import type { Stories, Posts, Follows, StoryViews } from '@/types/appwrite-models';
 
 export class SocialService {
   private readonly databaseId = DATABASE_IDS.CHAT;
@@ -15,7 +15,7 @@ export class SocialService {
   /**
    * Get user stories (active only)
    */
-  async getUserStories(userId: string): Promise<SocialRow[]> {
+  async getUserStories(userId: string): Promise<Stories[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -26,7 +26,7 @@ export class SocialService {
           Query.orderDesc('createdAt')
         ]
       });
-      return response.rows as SocialRow[];
+      return response.rows as unknown as Stories[];
     } catch (error) {
       console.error('Error getting user stories:', error);
       return [];
@@ -36,8 +36,12 @@ export class SocialService {
   /**
    * Create a story
    */
-  async createStory(data: { userId: string; mediaUrl: string; type: string; duration?: number }): Promise<SocialRow | null> {
+  async createStory(data: Partial<Stories>): Promise<Stories | null> {
     try {
+      if (!data.userId || !data.mediaUrl || !data.contentType) {
+        throw new Error('Missing required fields');
+      }
+
       // Default 24h expiration
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       
@@ -52,7 +56,7 @@ export class SocialService {
           views: 0
         }
       });
-      return result as unknown as SocialRow;
+      return result as unknown as Stories;
     } catch (error) {
       console.error('Error creating story:', error);
       return null;
@@ -88,10 +92,6 @@ export class SocialService {
           viewedAt: new Date().toISOString()
         }
       });
-
-      // Increment view count on story (if possible, blindly)
-      // Note: concurrency might be an issue, ideally use an atomic increment if supported
-      // For now, we just skip updating the count to avoid read-write race or assume a cloud function handles it.
     } catch (error) {
       console.error('Error viewing story:', error);
     }
@@ -100,7 +100,7 @@ export class SocialService {
   /**
    * Get user posts
    */
-  async getUserPosts(userId: string): Promise<SocialRow[]> {
+  async getUserPosts(userId: string): Promise<Posts[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -110,7 +110,7 @@ export class SocialService {
           Query.orderDesc('createdAt')
         ]
       });
-      return response.rows as SocialRow[];
+      return response.rows as unknown as Posts[];
     } catch (error) {
       console.error('Error getting user posts:', error);
       return [];
@@ -120,7 +120,7 @@ export class SocialService {
   /**
    * Get feed posts
    */
-  async getFeedPosts(): Promise<SocialRow[]> {
+  async getFeedPosts(): Promise<Posts[]> {
     try {
       // For now, just global feed
       const response = await tablesDB.listRows({
@@ -131,7 +131,7 @@ export class SocialService {
           Query.limit(20)
         ]
       });
-      return response.rows as SocialRow[];
+      return response.rows as unknown as Posts[];
     } catch (error) {
       console.error('Error getting feed posts:', error);
       return [];
@@ -141,7 +141,7 @@ export class SocialService {
   /**
    * Create a post
    */
-  async createPost(data: { userId: string; content: string; mediaUrls?: string[] }): Promise<SocialRow | null> {
+  async createPost(data: { userId: string; content: string; mediaUrls?: string[] }): Promise<Posts | null> {
     try {
       const result = await tablesDB.createRow({
         databaseId: this.databaseId,
@@ -153,7 +153,7 @@ export class SocialService {
           createdAt: new Date().toISOString()
         }
       });
-      return result as unknown as SocialRow;
+      return result as unknown as Posts;
     } catch (error) {
       console.error('Error creating post:', error);
       return null;
@@ -178,7 +178,7 @@ export class SocialService {
   /**
    * Get followers
    */
-  async getFollowers(userId: string): Promise<SocialRow[]> {
+  async getFollowers(userId: string): Promise<Follows[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -187,7 +187,7 @@ export class SocialService {
           Query.equal('followingId', userId)
         ]
       });
-      return response.rows as SocialRow[];
+      return response.rows as unknown as Follows[];
     } catch (error) {
       console.error('Error getting followers:', error);
       return [];
@@ -197,7 +197,7 @@ export class SocialService {
   /**
    * Get following
    */
-  async getFollowing(userId: string): Promise<SocialRow[]> {
+  async getFollowing(userId: string): Promise<Follows[]> {
     try {
       const response = await tablesDB.listRows({
         databaseId: this.databaseId,
@@ -206,7 +206,7 @@ export class SocialService {
           Query.equal('followerId', userId)
         ]
       });
-      return response.rows as SocialRow[];
+      return response.rows as unknown as Follows[];
     } catch (error) {
       console.error('Error getting following:', error);
       return [];

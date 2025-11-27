@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { socialService, realtimeService } from '@/lib/appwrite';
-import type { Stories, Posts, Follows } from '@/types/appwrite.d';
+import type { Stories, Posts, Follows } from '@/types/appwrite-models';
 
 export function useStories(userId?: string) {
   const [stories, setStories] = useState<Stories[]>([]);

@@ -16,6 +16,7 @@ import type {
     ContactsRelationship,
     PostsContentType,
     PostsPrivacy,
+    FollowsStatus,
     WalletsChain,
     WalletsWalletType
 } from './appwrite-enums';
@@ -31,12 +32,13 @@ export type {
     ContactsRelationship,
     PostsContentType,
     PostsPrivacy,
+    FollowsStatus,
     WalletsChain,
     WalletsWalletType
 };
 
 // Base Row type
-type Row = Models.Document;
+type Row = Models.Row;
 
 export type Messages = Row & {
     conversationId: string;
@@ -192,3 +194,149 @@ export type TypingIndicators = Row & {
     isTyping: boolean;
     expiresAt: string;
 };
+
+export type TokenHoldings = Row & {
+    userId: string;
+    walletAddress: string;
+    chain: string;
+    tokenAddress: string;
+    tokenSymbol: string | null;
+    tokenName: string | null;
+    balance: string | null;
+    decimals: number;
+    usdValue: number | null;
+    pricePerToken: number | null;
+    lastSynced: string | null;
+};
+
+export type StickerPacks = Row & {
+    name: string;
+    description: string | null;
+    creatorId: string | null;
+    coverImageUrl: string | null;
+    coverImageFileId: string | null;
+    stickerCount: number;
+    isPremium: boolean;
+    price: number;
+    currency: string | null;
+    downloadCount: number;
+    isPublic: boolean;
+    tags: string[];
+    createdAt: string | null;
+    updatedAt: string | null;
+};
+
+export type Stickers = Row & {
+    name: string;
+    description: string | null;
+    creatorId: string | null;
+    packId: string | null;
+    imageUrl: string;
+    imageFileId: string | null;
+    animatedUrl: string | null;
+    animatedFileId: string | null;
+    tags: string[];
+    category: string | null;
+    isPremium: boolean;
+    isAnimated: boolean;
+    usageCount: number;
+    isPublic: boolean;
+    createdAt: string | null;
+};
+
+export type UserStickers = Row & {
+    userId: string;
+    stickerPackId: string;
+    isPurchased: boolean;
+    isFavorite: boolean;
+    addedAt: string | null;
+};
+
+export type GiFs = Row & {
+    title: string;
+    url: string;
+    fileId: string | null;
+    thumbnailUrl: string | null;
+    source: string | null;
+    externalId: string | null;
+    tags: string[];
+    category: string | null;
+    width: number | null;
+    height: number | null;
+    usageCount: number;
+    createdAt: string | null;
+};
+
+export type Polls = Row & {
+    creatorId: string;
+    conversationId: string | null;
+    messageId: string | null;
+    question: string;
+    options: string;
+    votes: string | null;
+    totalVotes: number;
+    allowMultiple: boolean;
+    isAnonymous: boolean;
+    expiresAt: string | null;
+    createdAt: string | null;
+};
+
+export type ArFilters = Row & {
+    name: string;
+    description: string | null;
+    creatorId: string | null;
+    thumbnailUrl: string;
+    thumbnailFileId: string | null;
+    filterDataUrl: string;
+    filterDataFileId: string | null;
+    // category: ArFiltersCategory; // Enum not imported yet
+    tags: string[];
+    isPremium: boolean;
+    usageCount: number;
+    isPublic: boolean;
+    createdAt: string | null;
+};
+
+export type MediaLibrary = Row & {
+    userId: string;
+    fileId: string;
+    fileName: string;
+    fileType: string;
+    mimeType: string | null;
+    fileSize: number | null;
+    width: number | null;
+    height: number | null;
+    duration: number | null;
+    thumbnailFileId: string | null;
+    url: string | null;
+    metadata: string | null;
+    tags: string[];
+    album: string | null;
+    isPublic: boolean;
+    uploadedAt: string | null;
+};
+
+export type StoryViews = Row & {
+    storyId: string;
+    viewerId: string;
+    watchDuration: number;
+    completedView: boolean;
+    viewedAt: string | null;
+};
+
+export type Follows = Row & {
+    followerId: string;
+    followingId: string;
+    status: FollowsStatus;
+    isCloseFriend: boolean;
+    notificationsEnabled: boolean;
+    createdAt: string | null;
+};
+
+// Types for proposed/missing collections
+export type Nfts = Row & Record<string, any>;
+export type CryptoTransactions = Row & Record<string, any>;
+export type TokenGifts = Row & Record<string, any>;
+export type Notifications = Row & Record<string, any>;
+export type Profiles = Row & Record<string, any>;
+
