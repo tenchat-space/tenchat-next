@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { meetingService } from '@/services/meeting.service';
+import { meetingService } from '@/lib/services/meeting.service';
 
 export type MeetingState = 'idle' | 'connecting' | 'connected' | 'failed';
 

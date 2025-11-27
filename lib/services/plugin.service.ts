@@ -9,7 +9,7 @@ import type {
   TransportDefinition,
   BotDefinition,
   SystemEvent 
-} from '../types';
+} from '../../types';
 
 export interface PluginContext {
   userId: string;

@@ -1,7 +1,7 @@
 // @generated tenchat-tool: key-management-service@1.0.0 hash: initial DO NOT EDIT DIRECTLY
 // Key management service implementing secure key lifecycle
 
-import type { IKeyManagementService, Identity, SessionState } from '../types';
+import type { IKeyManagementService, Identity, SessionState } from '../../types';
 import { CryptoService } from './crypto.service';
 
 export class KeyManagementService implements IKeyManagementService {

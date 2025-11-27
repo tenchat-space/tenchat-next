@@ -8,7 +8,7 @@ import type {
   IChainClient, 
   BlockchainAnchor, 
   PaymentTransaction 
-} from '../types';
+} from '../../types';
 import { CryptoService } from './crypto.service';
 
 /**

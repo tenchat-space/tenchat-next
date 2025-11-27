@@ -1,7 +1,7 @@
 // @generated tenchat-tool: crypto-service@1.0.0 hash: initial DO NOT EDIT DIRECTLY
 // Cryptographic service implementing E2EE with Signal Protocol
 
-import type { KeyPair, SessionState, ChainState, Identity } from '../types';
+import type { KeyPair, SessionState, ChainState, Identity } from '../../types';
 
 export class CryptoService {
   private readonly ALGORITHM = 'AES-GCM';
