@@ -9,4 +9,4 @@ export * from './crypto.service';
 export * from './key-management.service';
 export * from './meeting.service';
 export * from './plugin.service';
-
+export * from './tenchat-contracts.service';
