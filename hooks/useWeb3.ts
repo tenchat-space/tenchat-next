@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { web3Service } from '@/lib/appwrite';
+import { tenchatContracts } from '@/lib/services/tenchat-contracts.service'; // Integrated
 import type { Wallets, Nfts, CryptoTransactions, TokenGifts, TokenHoldings } from '@/types/appwrite-models';
 
 export function useWallets(userId: string) {
@@ -32,14 +33,31 @@ export function useWallets(userId: string) {
     loadWallets();
   }, [loadWallets]);
 
+  // Updated to use Tenchat Contracts integration
   const connectWallet = useCallback(async (
     address: string,
     chain: string,
     walletType: string
   ) => {
     try {
-      const newWallet = await web3Service.connectWallet(userId, address, chain, walletType);
-      setWallets(prev => [...prev, newWallet]);
+      // 1. Trigger viem wallet connection first
+      const connectedAddress = await tenchatContracts.connectWallet();
+      
+      if (!connectedAddress) {
+        throw new Error("Failed to connect wallet via Web3 provider");
+      }
+
+      // If the user provided a different address manually or we want to enforce consistency
+      const effectiveAddress = connectedAddress || address;
+
+      // 2. Persist to Appwrite DB
+      const newWallet = await web3Service.connectWallet(userId, effectiveAddress, chain, walletType);
+      
+      setWallets(prev => {
+        // Avoid duplicates in state
+        if (prev.find(w => w.address === newWallet.address)) return prev;
+        return [...prev, newWallet];
+      });
       return newWallet;
     } catch (err) {
       setError(err as Error);
